@@ -1,4 +1,16 @@
-# Summary
+# dao-max-pd
+
+This repository is a collection of Max/MSP and Pd externals developed from the explanations in the book *"Designing Audio Objects for Max/MSP and Pd"* by Eric Lyon. 
+
+## FORK NOTES
+
+This WIP fork revises the old structure to exclusively use `cmake` for builds and also aims to update 32bit externals to 64bit.
+
+To build: `make`
+
+
+## Overview
+
 This repository is a collection of Max/MSP and Pd externals developed from the explanations in the book *"Designing Audio Objects for Max/MSP and Pd"* by Eric Lyon.  
 
 The externals developed are:  
