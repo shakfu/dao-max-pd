@@ -458,8 +458,8 @@ void oscil_attributes_perform64(t_oscil_attributes* x, t_object* dsp64, double**
     t_double frequency = x->frequency;
     long table_size = x->table_size;
     
-    t_double *wavetable = x->wavetable;
-    t_double *wavetable_old = x->wavetable_old;
+    float *wavetable = x->wavetable;
+    float *wavetable_old = x->wavetable_old;
     
     t_double phase = x->phase;
     t_double increment = x->increment;
