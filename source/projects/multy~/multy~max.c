@@ -2,87 +2,82 @@
 #include "multy~common.h"
 
 /* Function prototypes ********************************************************/
-void *multy_new(void);
-void multy_free(t_multy *x);
+void *multy_new(t_symbol *s, short argc, t_atom *argv);
+
+void multy_float(t_multy *x, double farg);
 void multy_assist(t_multy *x, void *b, long msg, long arg, char *dst);
 
 /* The 'initialization' routine ***********************************************/
 int C74_EXPORT main()
 {
-	/* Initialize the class */
-	multy_class = class_new("multy~",
-							 (method)multy_new,
-							 (method)multy_free,
-							 sizeof(t_multy), 0, 0);
-	
-	/* Bind the DSP method, which is called when the DACs are turned on */
-	class_addmethod(multy_class, (method)multy_dsp, "dsp", A_CANT, 0);
-	
-	/* Bind the assist method, which is called on mouse-overs to inlets and outlets */
-	class_addmethod(multy_class, (method)multy_assist, "assist", A_CANT, 0);
-	
-	/* Add standard Max methods to the class */
-	class_dspinit(multy_class);
-	
-	/* Register the class with Max */
-	class_register(CLASS_BOX, multy_class);
-	
-	/* Print message to Max window */
-	object_post(NULL, "multy~ • External was loaded");
-	
-	/* Return with no error */
-	return 0;
-}
+    /* Initialize the class */
+    multy_class = class_new("multy~",
+                              (method)multy_new,
+                              (method)multy_free,
+                              sizeof(t_multy), 0, A_GIMME, 0);
 
-/* The inlets/outlets indexes *************************************************/
-enum INLETS {INPUT1, INPUT2, NUM_INLETS};
-enum OUTLETS {OUTPUT, NUM_OUTLETS};
+    /* Bind the DSP method, which is called when the DACs are turned on */
+    // class_addmethod(multy_class, (method)multy_dsp, "dsp", A_CANT, 0);
+    class_addmethod(multy_class, (method)multy_dsp64, "dsp64", A_CANT, 0);
+
+    /* Bind the float method, which is called when floats are sent to inlets */
+    class_addmethod(multy_class, (method)multy_float, "float", A_FLOAT, 0);
+
+    /* Bind the assist method, which is called on mouse-overs to inlets and outlets */
+    class_addmethod(multy_class, (method)multy_assist, "assist", A_CANT, 0);
+
+    /* Add standard Max methods to the class */
+    class_dspinit(multy_class);
+
+    /* Register the class with Max */
+    class_register(CLASS_BOX, multy_class);
+
+    /* Print message to Max window */
+    object_post(NULL, "multy~ • External was loaded");
+
+    /* Return with no error */
+    return 0;
+}
 
 /* The 'new instance' routine *************************************************/
-void *multy_new(void)
+void *multy_new(t_symbol *s, short argc, t_atom *argv)
 {
-	/* Instantiate a new object */
-	t_multy *x = (t_multy *)object_alloc(multy_class);
-	
-	/* Create signal inlets */
-	dsp_setup((t_pxobject *)x, NUM_INLETS);
-	
-	/* Create signal outlets */
-	outlet_new((t_object *)x, "signal");
-	
-	/* Print message to Max window */
-	object_post((t_object *)x, "Object was created");
-	
-	/* Return a pointer to the new object */
-	return x;
+    /* Instantiate a new object */
+    t_multy *x = (t_multy *)object_alloc(multy_class);
+
+    return multy_common_new(x, argc, argv);
 }
 
-/* The 'free instance' routine ************************************************/
-void multy_free(t_multy *x)
+/******************************************************************************/
+
+
+
+
+
+
+/* The 'float' method *********************************************************/
+void multy_float(t_multy *x, double farg)
 {
-	dsp_free((t_pxobject *)x);
-	
-	/* Print message to Max window */
-	object_post((t_object *)x, "Memory was freed");
+    // nothing
 }
 
 /* The 'assist' method ********************************************************/
 void multy_assist(t_multy *x, void *b, long msg, long arg, char *dst)
 {
-	/* Document inlet functions */
-	if (msg == ASSIST_INLET) {
-		switch (arg) {
-			case INPUT1: sprintf(dst, "(signal) Input"); break;
-			case INPUT2: sprintf(dst, "(signal) Input"); break;
-		}
-	}
-	
-	/* Document outlet functions */
-	else if (msg == ASSIST_OUTLET) {
-		switch (arg) {
-			case OUTPUT: sprintf(dst, "(signal) Output"); break;
-		}
-	}
+    /* Document inlet functions */
+    if (msg == ASSIST_INLET) {
+        switch (arg) {
+            case I_INPUT1: sprintf(dst, "(signal) Input 1"); break;
+            case I_INPUT2: sprintf(dst, "(signal) Input 2"); break;
+        }
+    }
+
+    /* Document outlet functions */
+    else if (msg == ASSIST_OUTLET) {
+        switch (arg) {
+            case O_OUTPUT: sprintf(dst, "(signal) Output"); break;
+        }
+    }
 }
 
 /******************************************************************************/
