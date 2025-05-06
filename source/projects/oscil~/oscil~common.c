@@ -87,20 +87,20 @@ void free_memory(void *ptr, long nbytes)
 void *oscil_common_new(t_oscil *x, short argc, t_atom *argv)
 {
 #ifdef TARGET_IS_MAX
-	/* Create signal inlets */
-	dsp_setup((t_pxobject *)x, NUM_INLETS);
-	
-	/* Create signal outlets */
-	outlet_new((t_object *)x, "signal");
-	
-	/* Avoid sharing memory among audio vectors */
-	x->obj.z_misc |= Z_NO_INPLACE;
+    /* Create signal inlets */
+    dsp_setup((t_pxobject *)x, NUM_INLETS);
+    
+    /* Create signal outlets */
+    outlet_new((t_object *)x, "signal");
+    
+    /* Avoid sharing memory among audio vectors */
+    x->obj.z_misc |= Z_NO_INPLACE;
 #elif TARGET_IS_PD
-	/* Create signal inlets */
-	inlet_new(&x->obj, &x->obj.ob_pd, gensym("signal"), gensym("signal"));
-	
-	/* Create signal outlets */
-	outlet_new(&x->obj, gensym("signal"));
+    /* Create signal inlets */
+    inlet_new(&x->obj, &x->obj.ob_pd, gensym("signal"), gensym("signal"));
+    
+    /* Create signal outlets */
+    outlet_new(&x->obj, gensym("signal"));
 #endif
     
     /* Parse passed arguments */
@@ -109,7 +109,7 @@ void *oscil_common_new(t_oscil *x, short argc, t_atom *argv)
     parse_symbol_arg(&x->waveform, gensym(DEFAULT_WAVEFORM), A_WAVEFORM, argc, argv);
     parse_int_arg(&x->harmonics, MINIMUM_HARMONICS, DEFAULT_HARMONICS, MAXIMUM_HARMONICS, A_HARMONICS, argc, argv);
     
-	/* Initialize state variables */
+    /* Initialize state variables */
     x->wavetable_bytes = x->table_size * sizeof(float);
     x->wavetable = (float *)new_memory(x->wavetable_bytes);
     x->wavetable_old = (float *)new_memory(x->wavetable_bytes);
@@ -156,11 +156,11 @@ void *oscil_common_new(t_oscil *x, short argc, t_atom *argv)
         error("oscil~ • Invalid argument: Waveform set to %s", x->waveform->s_name);
     }
     
-	/* Print message to Max window */
-	post("oscil~ • Object was created");
-	
-	/* Return a pointer to the new object */
-	return x;
+    /* Print message to Max window */
+    post("oscil~ • Object was created");
+    
+    /* Return a pointer to the new object */
+    return x;
 }
 
 /* The object-specific methods ************************************************/
@@ -357,63 +357,178 @@ void oscil_fadetype(t_oscil *x, t_symbol *msg, short argc, t_atom *argv)
 void oscil_free(t_oscil *x)
 {
 #ifdef TARGET_IS_MAX
-	/* Remove the object from the DSP chain */
-	dsp_free((t_pxobject *)x);
+    /* Remove the object from the DSP chain */
+    dsp_free((t_pxobject *)x);
 #endif
     
     /* Free allocated dynamic memory */
     free_memory(x->wavetable, x->wavetable_bytes);
     free_memory(x->wavetable_old, x->wavetable_bytes);
     free_memory(x->amplitudes, x->amplitudes_bytes);
-	
-	/* Print message to Max window */
-	post("oscil~ • Memory was freed");
+    
+    /* Print message to Max window */
+    post("oscil~ • Memory was freed");
 }
 
 /* The 'DSP' method ***********************************************************/
-void oscil_dsp(t_oscil *x, t_signal **sp, short *count)
-{
-	/* Store signal connection states of inlets */
-	#ifdef TARGET_IS_MAX
-		x->frequency_connected = count[0];
-	#elif TARGET_IS_PD
-		x->frequency_connected = 1;
-	#endif
+#ifdef TARGET_IS_MAX
 
-	/* Adjust to changes in the sampling rate */
-	if (x->fs != sp[0]->s_sr) {
-		x->fs = sp[0]->s_sr;
-		
-		x->increment = (float)x->table_size / x->fs;
+void oscil_dsp64(t_oscil* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
+{
+    /* Store signal connection states of inlets */
+    x->frequency_connected = count[0];
+
+    /* Adjust to changes in the sampling rate */
+    if (x->fs != samplerate) {
+        x->fs = samplerate;
+        
+        x->increment = (float)x->table_size / x->fs;
         x->crossfade_samples = x->crossfade_time * x->fs / 1000.0;
-	}
+    }
     x->phase = 0;
     x->just_turned_on = 1;
-	
-	/* Attach the object to the DSP chain */
-	dsp_add(oscil_perform, NEXT-1, x,
-			sp[0]->s_vec,
-			sp[1]->s_vec,
-			sp[0]->s_n);
-	
-	/* Print message to Max window */
-	post("oscil~ • Executing 32-bit perform routine");
+    
+    /* Attach the object to the DSP chain */
+    object_method(dsp64, gensym("dsp_add64"), x, oscil_perform64, 0, NULL);
+    
+    /* Print message to Max window */
+    post("oscil~ • Executing 64-bit perform routine");
+}
+
+void oscil_perform64(t_oscil* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
+{
+    /* Copy signal pointers */
+    t_double* frequency_signal = ins[0];
+    t_double* output = outs[0];
+    int n = sampleframes;
+    
+    /* Load state variables */
+    double frequency = x->frequency;
+    long table_size = x->table_size;
+    
+    float *wavetable = x->wavetable;
+    float *wavetable_old = x->wavetable_old;
+    
+    double phase = x->phase;
+    double increment = x->increment;
+    
+    short crossfade_type = x->crossfade_type;
+    long crossfade_samples = x->crossfade_samples;
+    long crossfade_countdown = x->crossfade_countdown;
+    
+    double piOtwo = x->piOtwo;
+    
+    /* Perform the DSP loop */
+    double sample_increment;
+    long iphase;
+    
+    double interp;
+    double samp1;
+    double samp2;
+    
+    double old_sample;
+    double new_sample;
+    double out_sample;
+    double fraction;
+    
+    while (n--)
+    {
+        if (x->frequency_connected) {
+            sample_increment = increment * *frequency_signal++;
+        } else {
+            sample_increment = increment * frequency;
+        }
+        
+        iphase = floor(phase);
+        interp = phase - iphase;
+        
+        samp1 = wavetable_old[ (iphase+0) ];
+        samp2 = wavetable_old[ (iphase+1)%table_size ];
+        old_sample = samp1 + interp * (samp2 - samp1);
+        
+        samp1 = wavetable[ (iphase+0) ];
+        samp2 = wavetable[ (iphase+1)%table_size ];
+        new_sample = samp1 + interp * (samp2 - samp1);
+        
+        if (x->dirty) {
+            out_sample = old_sample;
+        } else if (crossfade_countdown > 0) {
+            fraction = (double)crossfade_countdown / (double)crossfade_samples;
+            
+            if (crossfade_type == POWER_CROSSFADE) {
+                fraction *= piOtwo;
+                out_sample = sin(fraction) * old_sample + cos(fraction) * new_sample;
+            } else if (crossfade_type == LINEAR_CROSSFADE) {
+                out_sample = fraction * old_sample + (1-fraction) * new_sample;
+            } else {
+                out_sample = old_sample;
+            }
+            
+            crossfade_countdown--;
+            
+        } else {
+            out_sample = new_sample;
+        }
+        
+        *output++ = out_sample;
+        
+        phase += sample_increment;
+        while (phase >= table_size)
+            phase -= table_size;
+        while (phase < 0)
+            phase += table_size;
+    }
+    
+    if (crossfade_countdown == 0) {
+        x->crossfade_in_progress = 0;
+    }
+    
+    /* Update state variables */
+    x->phase = phase;
+    x->crossfade_countdown = crossfade_countdown;
+}
+
+#else
+
+void oscil_dsp(t_oscil *x, t_signal **sp, short *count)
+{
+    /* Store signal connection states of inlets */
+    x->frequency_connected = 1;
+
+    /* Adjust to changes in the sampling rate */
+    if (x->fs != sp[0]->s_sr) {
+        x->fs = sp[0]->s_sr;
+        
+        x->increment = (float)x->table_size / x->fs;
+        x->crossfade_samples = x->crossfade_time * x->fs / 1000.0;
+    }
+    x->phase = 0;
+    x->just_turned_on = 1;
+    
+    /* Attach the object to the DSP chain */
+    dsp_add(oscil_perform, NEXT-1, x,
+            sp[0]->s_vec,
+            sp[1]->s_vec,
+            sp[0]->s_n);
+    
+    /* Print message to Max window */
+    post("oscil~ • Executing 32-bit perform routine");
 }
 
 /* The 'perform' routine ******************************************************/
 t_int *oscil_perform(t_int *w)
 {
-	/* Copy the object pointer */
-	t_oscil *x = (t_oscil *)w[OBJECT];
-	
-	/* Copy signal pointers */
+    /* Copy the object pointer */
+    t_oscil *x = (t_oscil *)w[OBJECT];
+    
+    /* Copy signal pointers */
     t_float *frequency_signal = (t_float *)w[FREQUENCY];
     t_float *output = (t_float *)w[OUTPUT];
-	
-	/* Copy the signal vector size */
-	t_int n = w[VECTOR_SIZE];
-	
-	/* Load state variables */
+    
+    /* Copy the signal vector size */
+    t_int n = w[VECTOR_SIZE];
+    
+    /* Load state variables */
     float frequency = x->frequency;
     long table_size = x->table_size;
     
@@ -429,7 +544,7 @@ t_int *oscil_perform(t_int *w)
     
     float piOtwo = x->piOtwo;
     
-	/* Perform the DSP loop */
+    /* Perform the DSP loop */
     float sample_increment;
     long iphase;
     
@@ -489,7 +604,7 @@ t_int *oscil_perform(t_int *w)
         while (phase < 0)
             phase += table_size;
     }
-	
+    
     if (crossfade_countdown == 0) {
         x->crossfade_in_progress = 0;
     }
@@ -499,7 +614,7 @@ t_int *oscil_perform(t_int *w)
     x->crossfade_countdown = crossfade_countdown;
     
     /* Return the next address in the DSP chain */
-	return w + NEXT;
+    return w + NEXT;
 }
-
+#endif
 /******************************************************************************/

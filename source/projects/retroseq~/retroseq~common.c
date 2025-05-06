@@ -523,15 +523,118 @@ void retroseq_play_backwards(t_retroseq *x, t_symbol *msg, short argc, t_atom *a
 
 
 /* The 'DSP' method ***********************************************************/
+#ifdef TARGET_IS_MAX
+void retroseq_dsp64(t_retroseq* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
+{
+    /* Initialize the remaining state variables */
+    x->duration_factor = (60.0 / x->tempo_bpm) * (x->fs / 1000.0);
+    x->sample_counter = 0;
+
+    x->current_note_value = x->note_sequence[0];
+    x->note_counter = x->note_sequence_length - 1;
+
+    x->current_duration_value = x->duration_sequence[0];
+    x->duration_counter = x->duration_sequence_length - 1;
+
+    x->manual_override = 0;
+    x->play_backwards = 0;
+
+    /* Adjust to changes in the sampling rate */
+    if (x->fs != samplerate) {
+        x->duration_factor *= samplerate / x->fs;
+        x->sample_counter *= x->fs / samplerate;
+
+        x->fs = samplerate;
+    }
+
+    /* Attach the object to the DSP chain */
+    object_method(dsp64, gensym("dsp_add64"), x, retroseq_perform64, 0, NULL);
+
+    /* Print message to Max window */
+    post("retroseq~ • Executing 64-bit perform routine");
+}
+
+void retroseq_perform64(t_retroseq* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
+{
+    t_double* output = outs[0];
+    int n = sampleframes;
+
+    /* Load state variables */
+    float *note_sequence = x->note_sequence;
+    int note_sequence_length = x->note_sequence_length;
+    float current_note_value = x->current_note_value;
+    int note_counter = x->note_counter;
+
+    float *duration_sequence = x->duration_sequence;
+    int duration_sequence_length = x->duration_sequence_length;
+    float current_duration_value = x->current_duration_value;
+    int duration_counter = x->duration_counter;
+
+    float duration_factor = x->duration_factor;
+    int sample_counter = x->sample_counter;
+
+    short manual_override = x->manual_override;
+    short trigger_sent = x->trigger_sent;
+
+    /* Perform the DSP loop */
+    if (manual_override) {
+        while (n--)
+        {
+            if (trigger_sent) {
+                trigger_sent = 0;
+
+                if (++note_counter >= note_sequence_length) {
+                    note_counter = 0;
+                    clock_delay(x->bang_clock, 0);
+                }
+
+                current_note_value = note_sequence[note_counter];
+                clock_delay(x->adsr_clock, 0);
+            }
+            
+            *output++ = current_note_value;
+        }
+    }
+
+    else {
+        while (n--)
+        {
+            if (sample_counter-- <= 0) {
+                if (++note_counter >= note_sequence_length) {
+                    note_counter = 0;
+                    clock_delay(x->bang_clock, 0);
+                }
+
+                if (++duration_counter >= duration_sequence_length) {
+                    duration_counter = 0;
+                }
+
+                current_duration_value = duration_sequence[duration_counter];
+                sample_counter = current_duration_value * duration_factor;
+
+                current_note_value = note_sequence[note_counter];
+                clock_delay(x->adsr_clock, 0);
+            }
+            
+            *output++ = current_note_value;
+        }
+    }
+
+    /* Update state variables */
+    x->current_note_value = current_note_value;
+    x->note_counter = note_counter;
+
+    x->current_duration_value = current_duration_value;
+    x->duration_counter = duration_counter;
+    
+    x->sample_counter = sample_counter;
+    x->trigger_sent = trigger_sent;
+}
+
+#elif TARGET_IS_PD
+
 void retroseq_dsp(t_retroseq *x, t_signal **sp, short *count)
 {
-    /* Store signal connection states of inlets */
-#ifdef TARGET_IS_MAX
-    //nothing
-#elif TARGET_IS_PD
-    //nothing
-#endif
-
     /* Initialize the remaining state variables */
     x->duration_factor = (60.0 / x->tempo_bpm) * (x->fs / 1000.0);
     x->sample_counter = 0;
@@ -648,5 +751,5 @@ t_int *retroseq_perform(t_int *w)
     /* Return the next address in the DSP chain */
     return w + NEXT;
 }
-
+#endif
 /******************************************************************************/

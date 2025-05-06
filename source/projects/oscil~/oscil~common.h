@@ -89,8 +89,13 @@ static t_class *oscil_class;
 void *oscil_common_new(t_oscil *x, short argc, t_atom *argv);
 void oscil_free(t_oscil *x);
 
+#ifdef TARGET_IS_MAX
+void oscil_dsp64(t_oscil* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
+void oscil_perform64(t_oscil* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
+#else
 void oscil_dsp(t_oscil *x, t_signal **sp, short *count);
 t_int *oscil_perform(t_int *w);
+#endif
 
 void oscil_build_sine(t_oscil *x);
 void oscil_build_sawtooth(t_oscil *x);

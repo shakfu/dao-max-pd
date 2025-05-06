@@ -6,6 +6,14 @@ This repository is a collection of Max/MSP and Pd externals developed from the e
 
 This WIP fork revises the old structure to exclusively use `cmake` for builds and also aims to update 32bit externals to 64bit.
 
+Changes:
+
+- droped 32-bit `multy~`, and renamed `multy64~` to `multy~`
+
+- disabled building of Max external for `cartopol~` and `poltocar~` as there are already Max builtins
+
+
+
 To build: `make`
 
 

@@ -17,7 +17,7 @@ int C74_EXPORT main()
                                sizeof(t_scrubber), 0, A_GIMME, 0);
 
     /* Bind the DSP method, which is called when the DACs are turned on */
-    class_addmethod(scrubber_class, (method)scrubber_dsp, "dsp", A_CANT, 0);
+    class_addmethod(scrubber_class, (method)scrubber_dsp64, "dsp64", A_CANT, 0);
 
     /* Bind the float method, which is called when floats are sent to inlets */
     class_addmethod(scrubber_class, (method)scrubber_float, "float", A_FLOAT, 0);
@@ -73,18 +73,18 @@ void scrubber_assist(t_scrubber *x, void *b, long msg, long arg, char *dst)
     /* Document inlet functions */
     if (msg == ASSIST_INLET) {
         switch (arg) {
-            case I_REAL: sprintf(dst, "(signal) Real part"); break;
-            case I_IMAG: sprintf(dst, "(signal) Imaginary part"); break;
-            case I_SPEED: sprintf(dst, "(signal) Speed"); break;
-            case I_POSITION: sprintf(dst, "(signal) Position"); break;
+            case I_REAL: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Real part"); break;
+            case I_IMAG: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Imaginary part"); break;
+            case I_SPEED: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Speed"); break;
+            case I_POSITION: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Position"); break;
         }
     }
 
     /* Document outlet functions */
     else if (msg == ASSIST_OUTLET) {
         switch (arg) {
-            case O_REAL: sprintf(dst, "(signal) Real part"); break;
-            case O_IMAG: sprintf(dst, "(signal) Imaginary part"); break;
+            case O_REAL: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Real part"); break;
+            case O_IMAG: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Imaginary part"); break;
         }
     }
 }

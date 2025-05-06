@@ -219,19 +219,185 @@ void scrubber_resize(t_scrubber *x, t_symbol *msg, short argc, t_atom *argv)
 
 
 /* The 'DSP' method ***********************************************************/
+#ifdef TARGET_IS_MAX
+
+void scrubber_dsp64(t_scrubber* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
+{
+    /* Adjust to changes in the sampling rate */
+    float new_fs;
+    long new_fftsize;
+
+    new_fs = samplerate;
+    new_fftsize = maxvectorsize * 2;
+
+    long new_framecount =
+        (x->duration_ms * 0.001 * new_fs) * (x->overlap / new_fftsize);
+
+    if (x->fs != new_fs ||
+        x->fftsize != new_fftsize ||
+        x->framecount != new_framecount) {
+
+        x->fs = new_fs;
+        x->fftsize = new_fftsize;
+        x->framecount = new_framecount;
+
+        scrubber_init_memory(x);
+    }
+
+    /* Attach the object to the DSP chain */
+    object_method(dsp64, gensym("dsp_add64"), x, scrubber_perform64, 0, NULL);
+
+    /* Print message to Max window */
+    post("scrubber~ • Executing 64-bit perform routine");
+}
+
+void scrubber_perform64(t_scrubber* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
+{
+    /* Copy signal pointers */
+    t_double* input_real = ins[0];
+    t_double* input_imag = ins[1];
+    t_double* speed = ins[2];
+    t_double* position = ins[3];
+
+    t_double* output_real = outs[0];
+    t_double* output_imag = outs[1];
+    t_double* sync = outs[2];
+    int n = sampleframes;
+
+    /* Load state variables */
+    float **amplitudes = x->amplitudes;
+    float **phasediffs = x->phasediffs;
+
+    float *last_phase_in = x->last_phase_in;
+    float *last_phase_out = x->last_phase_out;
+
+    long framecount = x->framecount;
+
+    long recording_frame = x->recording_frame;
+    double playback_frame = x->playback_frame;
+    double last_position = x->last_position;
+
+    short acquire_samples = x->acquire_sample;
+    short buffer_status = x->buffer_status;
+
+    /* Perform the DSP loop */
+    double local_real;
+    double local_imag;
+    double local_magnitude;
+    double local_phase;
+    double phasediff;
+    double sync_val;
+
+    int framesize;
+    framesize = (int)n;
+
+    // mode: analysis
+    if (acquire_samples) {
+        sync_val = (double)recording_frame / (double)framecount;
+
+        for (int ii = 0; ii < framesize; ii++) {
+            local_real = input_real[ii];
+            local_imag = (ii == 0 || ii == framesize-1) ? 0.0 : input_imag[ii];
+
+            // functionality of cartopol~
+            local_magnitude = hypotf(local_real, local_imag);
+            local_phase = -atan2(local_imag, local_real);
+
+            // functionality of framedelta~
+            phasediff = local_phase - last_phase_in[ii];
+            last_phase_in[ii] = local_phase;
+
+            // functionality of phasewrap~
+            while (phasediff > PI) {
+                phasediff -= TWOPI;
+            }
+            while (phasediff < -PI) {
+                phasediff += TWOPI;
+            }
+
+            // record magnitudes and phases
+            amplitudes[recording_frame][ii] = local_magnitude;
+            phasediffs[recording_frame][ii] = phasediff;
+        }
+
+        // playback silence
+        for (int ii = 0; ii < n; ii++) {
+            output_real[ii] = 0.0;
+            output_imag[ii] = 0.0;
+            sync[ii] = sync_val;
+        }
+
+        recording_frame++;
+        if (recording_frame >= framecount) {
+            x->acquire_sample = 0;
+            x->buffer_status = SCRUBBER_FULL;
+        }
+
+    // mode: synthesis
+    } else if (buffer_status == SCRUBBER_FULL) {
+        sync_val = playback_frame / (double)framecount;
+
+        if (*position != last_position &&
+            *position >= 0.0 &&
+            *position <= 1.0) {
+
+            last_position = *position;
+            playback_frame = last_position * (double)(framecount - 1);
+        }
+
+        playback_frame += *speed;
+        while (playback_frame < 0.0) {
+            playback_frame += framecount;
+        }
+        while (playback_frame >= framecount) {
+            playback_frame -= framecount;
+        }
+
+        int int_playback_frame = floor(playback_frame);
+        for (int ii = 0; ii < framesize; ii++) {
+            local_magnitude = amplitudes[int_playback_frame][ii];
+            local_phase = phasediffs[int_playback_frame][ii];
+
+            // functionality of frameaccum~
+            last_phase_out[ii] += local_phase;
+            local_phase = last_phase_out[ii];
+
+            // functionality of poltocar~
+            local_real = local_magnitude * cos(local_phase);
+            local_imag = -local_magnitude * sin(local_phase);
+
+            // playback real and imaginary part
+            output_real[ii] = local_real;
+            output_imag[ii] = (ii == 0 || ii == framesize-1) ? 0.0 : local_imag;
+            sync[ii] = sync_val;
+        }
+
+    // mode: stand by - waiting to start sampling
+    } else {
+        for (int ii = 0; ii < n; ii++) {
+            output_real[ii] = 0.0;
+            output_imag[ii] = 0.0;
+            sync[ii] = 0.0;
+        }
+    }
+
+    /* Update state variables */
+    x->recording_frame = recording_frame;
+    x->playback_frame = playback_frame;
+    x->last_position = last_position;
+
+}
+
+#elif TARGET_IS_PD
+
 void scrubber_dsp(t_scrubber *x, t_signal **sp, short *count)
 {
     /* Adjust to changes in the sampling rate */
     float new_fs;
     long new_fftsize;
 
-    #ifdef TARGET_IS_MAX
-        new_fs = sp[0]->s_sr;
-        new_fftsize = sp[0]->s_n * 2;
-    #elif TARGET_IS_PD
-        new_fs = sys_getsr();
-        new_fftsize = sp[0]->s_n;
-    #endif
+    new_fs = sys_getsr();
+    new_fftsize = sp[0]->s_n;
 
     long new_framecount =
         (x->duration_ms * 0.001 * new_fs) * (x->overlap / new_fftsize);
@@ -418,4 +584,5 @@ t_int *scrubber_perform(t_int *w)
     return w + NEXT;
 }
 
+#endif
 /******************************************************************************/

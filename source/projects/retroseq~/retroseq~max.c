@@ -17,7 +17,7 @@ int C74_EXPORT main()
                                sizeof(t_retroseq), 0, A_GIMME, 0);
 
     /* Bind the DSP method, which is called when the DACs are turned on */
-    class_addmethod(retroseq_class, (method)retroseq_dsp, "dsp", A_CANT, 0);
+    class_addmethod(retroseq_class, (method)retroseq_dsp64, "dsp64", A_CANT, 0);
 
     /* Bind the float method, which is called when floats are sent to inlets */
     class_addmethod(retroseq_class, (method)retroseq_float, "float", A_FLOAT, 0);
@@ -94,19 +94,29 @@ void retroseq_assist(t_retroseq *x, void *b, long msg, long arg, char *dst)
     /* Document outlet functions */
     else if (msg == ASSIST_OUTLET) {
         switch (arg) {
-            case O_OUTPUT: sprintf(dst, "(signal) Output"); break;
+            case O_OUTPUT:
+                snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Output");
+            break;
         }
         switch (arg) {
-            case O_ADSR: sprintf(dst, "(list) ADSR envelope"); break;
+            case O_ADSR:
+                snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(list) ADSR envelope");
+                break;
         }
         switch (arg) {
-            case O_BANG: sprintf(dst, "(bang) When sequence (re)starts"); break;
+            case O_BANG:
+                snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(bang) When sequence (re)starts");
+                break;
         }
         switch (arg) {
-            case O_SHUFFLE_F: sprintf(dst, "(list) Permuted frequency sequence"); break;
+            case O_SHUFFLE_F:
+                snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(list) Permuted frequency sequence");
+                break;
         }
         switch (arg) {
-            case O_SHUFFLE_D: sprintf(dst, "(list) Permuted duration sequence"); break;
+            case O_SHUFFLE_D:
+                snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(list) Permuted duration sequence");
+                break;
         }
     }
 }
