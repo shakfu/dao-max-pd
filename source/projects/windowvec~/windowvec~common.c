@@ -61,6 +61,49 @@ void windowvec_free(t_windowvec *x)
 
 
 /* The 'DSP' method ***********************************************************/
+#ifdef TARGET_IS_MAX
+void windowvec_dsp64(t_windowvec* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
+{
+    if (x->vecsize != samplerate) {
+        x->vecsize = samplerate;
+
+        int bytesize = x->vecsize * sizeof(float);
+        if (x->window == NULL) {
+            x->window = (float *)malloc(bytesize);
+        } else {
+            x->window = (float *)realloc(x->window, bytesize);
+        }
+
+        for (int ii = 0; ii < x->vecsize; ii++) {
+            x->window[ii] = -0.5 * cos(TWOPI * ii / (float)x->vecsize) + 0.5;
+        }
+    }
+
+    /* Attach the object to the DSP chain */
+    object_method(dsp64, gensym("dsp_add64"), x, windowvec_perform64, 0, NULL);
+
+    /* Print message to Max window */
+    post("windowvec~ • Executing 64-bit perform routine");
+}
+
+void windowvec_perform64(t_windowvec* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
+{
+    t_double* input = ins[0];
+    t_double* output = outs[0];
+    int n = sampleframes;
+
+    /* Load state variables */
+    float *window = x->window;
+    // t_double vecsize = x->vecsize;
+
+    /* Perform the DSP loop */
+    for (int ii = 0; ii < n; ii++) {
+        output[ii] = input[ii] * window[ii];
+    }
+}
+
+#elif TARGET_IS_PD
+
 void windowvec_dsp(t_windowvec *x, t_signal **sp, short *count)
 {
     if (x->vecsize != sp[0]->s_n) {
@@ -103,7 +146,7 @@ t_int *windowvec_perform(t_int *w)
 
     /* Load state variables */
     float *window = x->window;
-    float vecsize = x->vecsize;
+    // float vecsize = x->vecsize;
 
     /* Perform the DSP loop */
     for (int ii = 0; ii < n; ii++) {
@@ -113,5 +156,5 @@ t_int *windowvec_perform(t_int *w)
     /* Return the next address in the DSP chain */
     return w + NEXT;
 }
-
+#endif
 /******************************************************************************/

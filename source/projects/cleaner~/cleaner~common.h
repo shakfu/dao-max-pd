@@ -56,8 +56,8 @@ void cleaner_free(t_cleaner *x);
 void cleaner_dsp64(t_cleaner* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
 void cleaner_perform64(t_cleaner* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
 #elif TARGET_IS_PD
-// void cleaner_dsp(t_cleaner *x, t_signal **sp, short *count);
-// t_int *cleaner_perform(t_int *w);
+void cleaner_dsp(t_cleaner *x, t_signal **sp, short *count);
+t_int *cleaner_perform(t_int *w);
 #endif
 /******************************************************************************/
 

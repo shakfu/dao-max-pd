@@ -45,10 +45,13 @@ static t_class *windowvec_class;
 /* Function prototypes ********************************************************/
 void *windowvec_common_new(t_windowvec *x, short argc, t_atom *argv);
 void windowvec_free(t_windowvec *x);
-
+#ifdef TARGET_IS_MAX
+void windowvec_dsp64(t_windowvec* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
+void windowvec_perform64(t_windowvec* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
+#elif TARGET_IS_PD
 void windowvec_dsp(t_windowvec *x, t_signal **sp, short *count);
 t_int *windowvec_perform(t_int *w);
-
+#endif
 /******************************************************************************/
 
 #endif /* windowvec_common_h */
