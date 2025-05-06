@@ -69,9 +69,13 @@ static t_class *vpdelay_class;
 void *vpdelay_common_new(t_vpdelay *x, short argc, t_atom *argv);
 void vpdelay_free(t_vpdelay *x);
 
+#ifdef TARGET_IS_MAX
+void vpdelay_dsp64(t_vpdelay* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
+void vpdelay_perform64(t_vpdelay* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
+#elif TARGET_IS_PD
 void vpdelay_dsp(t_vpdelay *x, t_signal **sp, short *count);
 t_int *vpdelay_perform(t_int *w);
-
+#endif
 /******************************************************************************/
 
 #endif /* vpdelay_common_h */
