@@ -37,6 +37,7 @@ jobs:
     - name: Build externals on Windows
       if: runner.os == 'Windows'
       run: |
+        mkdir build
         cd build
         cmake ..
         cmake --build . --config Release
