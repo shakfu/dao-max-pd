@@ -15,12 +15,12 @@ void *cleaner_common_new(t_cleaner *x, short argc, t_atom *argv)
     x->obj.z_misc |= Z_NO_INPLACE;
 
 #elif TARGET_IS_PD
-    // /* Create inlets */
-    // inlet_new(&x->obj, &x->obj.ob_pd, gensym("signal"), gensym("signal"));
-    // inlet_new(&x->obj, &x->obj.ob_pd, gensym("signal"), gensym("signal"));
+    /* Create inlets */
+    inlet_new(&x->obj, &x->obj.ob_pd, gensym("signal"), gensym("signal"));
+    inlet_new(&x->obj, &x->obj.ob_pd, gensym("signal"), gensym("signal"));
 
-    // /* Create signal outlets */
-    // outlet_new(&x->obj, gensym("signal"));
+    /* Create signal outlets */
+    outlet_new(&x->obj, gensym("signal"));
 
 #endif
 
@@ -130,98 +130,89 @@ void cleaner_perform64(t_cleaner* x, t_object* dsp64, double** ins, long numins,
         output[ii] = input[ii];
     }
 
-    /* Update state variables */
-    // nothing
-    
-    /* Return the next address in the DSP chain */
-    // return w + NEXT;
-
-    // while (n--) {
-    //     *outL++ = GAIN * *inL++;
-    // }
 }
 
 
 #elif TARGET_IS_PD
 /* The 'DSP' method ***********************************************************/
-// void cleaner_dsp(t_cleaner *x, t_signal **sp, short *count)
-// {
-//     /* Store signal connection states of inlets */
-//     x->threshold_connected = 1;
-//     x->attenuation_connected = 1;
+void cleaner_dsp(t_cleaner *x, t_signal **sp, short *count)
+{
+    /* Store signal connection states of inlets */
+    x->threshold_connected = 1;
+    x->attenuation_connected = 1;
 
 
-//     /* Adjust to changes in the sampling rate */
-//     if (x->fs != sp[0]->s_sr) {
-//         x->fs = sp[0]->s_sr;
-//     }
+    /* Adjust to changes in the sampling rate */
+    if (x->fs != sp[0]->s_sr) {
+        x->fs = sp[0]->s_sr;
+    }
 
-//     /* Attach the object to the DSP chain */
-//     dsp_add(cleaner_perform, NEXT-1, x,
-//             sp[0]->s_vec,
-//             sp[1]->s_vec,
-//             sp[2]->s_vec,
-//             sp[3]->s_vec,
-//             sp[0]->s_n);
+    /* Attach the object to the DSP chain */
+    dsp_add(cleaner_perform, NEXT-1, x,
+            sp[0]->s_vec,
+            sp[1]->s_vec,
+            sp[2]->s_vec,
+            sp[3]->s_vec,
+            sp[0]->s_n);
 
-//     /* Print message to Max window */
-//     post("cleaner~ • Executing 32-bit perform routine");
-// }
+    /* Print message to Max window */
+    post("cleaner~ • Executing 32-bit perform routine");
+}
 
-// /* The 'perform' routine ******************************************************/
-// t_int *cleaner_perform(t_int *w)
-// {
-//     /* Copy the object pointer */
-//     t_cleaner *x = (t_cleaner *)w[OBJECT];
+/* The 'perform' routine ******************************************************/
+t_int *cleaner_perform(t_int *w)
+{
+    /* Copy the object pointer */
+    t_cleaner *x = (t_cleaner *)w[OBJECT];
 
-//     /* Copy signal pointers */
-//     t_float *input = (t_float *)w[INPUT1];
-//     t_float *threshold = (t_float *)w[THRESHOLD];
-//     t_float *attenuation = (t_float *)w[ATTENUATION];
-//     t_float *output = (t_float *)w[OUTPUT1];
+    /* Copy signal pointers */
+    t_float *input = (t_float *)w[INPUT1];
+    t_float *threshold = (t_float *)w[THRESHOLD];
+    t_float *attenuation = (t_float *)w[ATTENUATION];
+    t_float *output = (t_float *)w[OUTPUT1];
 
-//     /* Copy the signal vector size */
-//     t_int n = w[VECTOR_SIZE];
+    /* Copy the signal vector size */
+    t_int n = w[VECTOR_SIZE];
 
-//     /* Load state variables */
-//     // nothing
+    /* Load state variables */
+    // nothing
 
-//     /* Perform the DSP loop */
-//     float maxamp = 0.0;
-//     float threshold_value;
-//     float attenuation_value;
+    /* Perform the DSP loop */
+    float maxamp = 0.0;
+    float threshold_value;
+    float attenuation_value;
 
-//     for (int ii = 0; ii < n; ii++) {
-//         if (maxamp < input[ii]) {
-//             maxamp = input[ii];
-//         }
-//     }
+    for (int ii = 0; ii < n; ii++) {
+        if (maxamp < input[ii]) {
+            maxamp = input[ii];
+        }
+    }
 
-//     if (x->threshold_connected) {
-//         threshold_value = (*threshold) * maxamp;
-//     } else {
-//         threshold_value = x->threshold_value * maxamp;
-//     }
+    if (x->threshold_connected) {
+        threshold_value = (*threshold) * maxamp;
+    } else {
+        threshold_value = x->threshold_value * maxamp;
+    }
 
-//     if (x->attenuation_connected) {
-//         attenuation_value = (*attenuation);
-//     } else {
-//         attenuation_value = x->attenuation_value;
-//     }
+    if (x->attenuation_connected) {
+        attenuation_value = (*attenuation);
+    } else {
+        attenuation_value = x->attenuation_value;
+    }
 
-//     for (int ii = 0; ii < n; ii++) {
-//         if (input[ii] < threshold_value) {
-//             input[ii] *= attenuation_value;
-//         }
-//         output[ii] = input[ii];
-//     }
+    for (int ii = 0; ii < n; ii++) {
+        if (input[ii] < threshold_value) {
+            input[ii] *= attenuation_value;
+        }
+        output[ii] = input[ii];
+    }
 
-//     /* Update state variables */
-//     // nothing
+    /* Update state variables */
+    // nothing
     
-//     /* Return the next address in the DSP chain */
-//     return w + NEXT;
-// }
+    /* Return the next address in the DSP chain */
+    return w + NEXT;
+}
 
 /******************************************************************************/
 #endif

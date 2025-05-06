@@ -236,12 +236,77 @@ void dynstoch_recalculate(t_dynstoch *x)
 }
 
 /******************************************************************************/
+#ifdef TARGET_IS_MAX
+void dynstoch_dsp64(t_dynstoch* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
+{
+    if (samplerate == 0) {
+        error("dynstoch~ • Sampling rate is equal to zero!");
+        return;
+    }
 
+    /* Initialize state variables */
+    x->sr = samplerate;
 
+    /* Initialize waveform */
+    dynstoch_freqrange(x, x->min_freq, x->max_freq);
+    if (x->first_time) {
+        dynstoch_initwave(x);
+        x->first_time = 0;
+    }
 
+    object_method(dsp64, gensym("dsp_add64"), x, dynstoch_perform64, 0, NULL);
 
+}
 
+void dynstoch_perform64(t_dynstoch* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
+{
+    t_double* input = ins[0];
+    t_double* output = outs[0];
+    t_double* frequency = outs[1];
+    int n = sampleframes;
 
+    /* Load state variables */
+    int num_points = x->num_points;
+    float *amplitudes = x->amplitudes;
+    float *durations = x->durations;
+
+    int current_segment = x->current_segment;
+    float remaining_samples = x->remaining_samples;
+
+    /* Perform the DSP loop */
+    float amplitude1 = amplitudes[current_segment + 0];
+    float amplitude2 = amplitudes[current_segment + 1];
+
+    float frac;
+    float sample;
+    while (n--) {
+        if (remaining_samples < 1) {
+            current_segment++;
+            if (current_segment == num_points) {
+                dynstoch_recalculate(x);
+                current_segment = 0;
+            }
+
+            remaining_samples = x->durations[current_segment];
+            amplitude1 = x->amplitudes[current_segment + 0];
+            amplitude2 = x->amplitudes[current_segment + 1];
+        }
+
+        frac = (remaining_samples - 1) / durations[current_segment];
+        sample = (amplitude1 - amplitude2) * frac + amplitude2;
+
+        *output++ = sample;
+        *frequency++ = x->freq;
+
+        remaining_samples--;
+    }
+
+    /* Update state variables */
+    x->current_segment = current_segment;
+    x->remaining_samples = remaining_samples;
+}
+
+#elif TARGET_IS_PD
 /* The 'DSP' method ***********************************************************/
 void dynstoch_dsp(t_dynstoch *x, t_signal **sp, short *count)
 {
@@ -327,5 +392,5 @@ t_int *dynstoch_perform(t_int *w)
     /* Return the next address in the DSP chain */
     return w + NEXT;
 }
-
+#endif
 /******************************************************************************/

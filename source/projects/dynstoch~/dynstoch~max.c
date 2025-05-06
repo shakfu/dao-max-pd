@@ -21,7 +21,7 @@ int C74_EXPORT main()
                                sizeof(t_dynstoch), 0, A_GIMME, 0);
 
     /* Bind the DSP method, which is called when the DACs are turned on */
-    class_addmethod(dynstoch_class, (method)dynstoch_dsp, "dsp", A_CANT, 0);
+    class_addmethod(dynstoch_class, (method)dynstoch_dsp64, "dsp64", A_CANT, 0);
 
     /* Bind the float method, which is called when floats are sent to inlets */
     class_addmethod(dynstoch_class, (method)dynstoch_float, "float", A_FLOAT, 0);

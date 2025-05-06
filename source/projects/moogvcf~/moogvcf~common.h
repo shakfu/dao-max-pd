@@ -48,9 +48,13 @@ static t_class *moogvcf_class;
 void *moogvcf_common_new(t_moogvcf *x, short argc, t_atom *argv);
 void moogvcf_free(t_moogvcf *x);
 
+#ifdef TARGET_IS_MAX
+void moogvcf_dsp64(t_moogvcf* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
+void moogvcf_perform64(t_moogvcf* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
+#elif TARGET_IS_PD
 void moogvcf_dsp(t_moogvcf *x, t_signal **sp, short *count);
 t_int *moogvcf_perform(t_int *w);
-
+#endif
 /******************************************************************************/
 
 #endif /* moogvcf_common_h */
