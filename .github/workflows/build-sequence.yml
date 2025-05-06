@@ -1,4 +1,4 @@
-name: build-all
+name: build-sequence
 on:
   workflow_dispatch:
     inputs:
@@ -41,20 +41,17 @@ jobs:
         cmake ..
         cmake --build . --config Release
 
-    - uses: actions/upload-artifact@v4
+    - name: upload win64 externals
+      uses: actions/upload-artifact@v4
       with:
-        name: dao-max-pd-win64
-        path: |
-            externals
-            help
-            media
-            patchers
-            LICENSE.md
-            README.md
+        name: win64-externals
+        path: externals/*.mxe64
+        retention-days: 1
 
 
   build-macos:
     runs-on: ${{ github.event.inputs.macos_version }}
+    needs: [build-windows]
     steps:
 
     - uses: actions/checkout@v4
@@ -69,12 +66,23 @@ jobs:
         cmake .. -GXcode
         cmake --build . --config Release
 
+    - name: Download Windows externals
+      uses: actions/download-artifact@v4
+      with:
+        name: win64-externals
+        path: externals
+        merge-multiple: true
+
+    - name: display externals
+      run: ls -R externals
+
     - uses: actions/upload-artifact@v4
       with:
-        name: dao-max-pd-macos
+        name: dao-max-pd
         path: |
             externals
             help
+            media
             patchers
             LICENSE.md
             README.md
