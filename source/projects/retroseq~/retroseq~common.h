@@ -8,6 +8,7 @@
 #include "ext_obex.h"
 #elif TARGET_IS_PD
 #include "m_pd.h"
+#define error post
 #endif
 
 #include <time.h>

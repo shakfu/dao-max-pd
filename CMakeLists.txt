@@ -24,6 +24,13 @@ if (APPLE)
     endif()
 endif()
 
+# set(PDCMAKE_DIR ${CMAKE_SOURCE_DIR}/source/scripts/cmake CACHE PATH "Path to pd.cmake")
+# set(PD_INSTALL_LIBS OFF)
+# set(PD_SOURCES_PATH ${CMAKE_SOURCE_DIR}/source/include)
+# include(${PDCMAKE_DIR}/pd.cmake)
+
+include(${CMAKE_SOURCE_DIR}/source/scripts/cmake/fn_add_max_external.cmake)
+include(${CMAKE_SOURCE_DIR}/source/scripts/cmake/fn_add_pd_external.cmake)
 
 MACRO(SUBDIRLIST result curdir)
   FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)

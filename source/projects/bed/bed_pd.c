@@ -4,6 +4,8 @@
 #include <string.h>
 #include "stdlib.h"
 
+#define error post
+
 /* The class pointer **********************************************************/
 static t_class *bed_class;
 
