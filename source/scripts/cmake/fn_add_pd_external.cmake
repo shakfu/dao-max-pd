@@ -181,6 +181,7 @@ function(add_pd_external)
         $<$<PLATFORM_ID:Linux>:-rdynamic>
         $<$<PLATFORM_ID:Linux>:-shared>
         $<$<PLATFORM_ID:Linux>:-fPIC>
+        $<$<PLATFORM_ID:Windows>:/FORCE:UNRESOLVED>
     )
 
     target_link_libraries(
