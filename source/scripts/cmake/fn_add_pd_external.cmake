@@ -11,6 +11,9 @@ function(add_pd_external)
     )
     set(oneValueArgs 
         PROJECT_NAME
+        PROJECT_TARGET
+        FLOATSIZE # default 32
+        EXTENSION
     )
     set(multiValueArgs
         PROJECT_SOURCE
@@ -22,6 +25,7 @@ function(add_pd_external)
         COMPILE_OPTIONS
         LINK_OPTIONS
         PATCH_FILES
+        DATA_FILES
     )
 
     cmake_parse_arguments(
@@ -31,6 +35,10 @@ function(add_pd_external)
         "${multiValueArgs}"
         ${ARGN}
     )
+
+    # if(${PD_PROJECT_TARGET} MATCHES "~$")
+    #     string(REGEX REPLACE "~$" "_tilde" PD_PROJECT_TARGET ${PD_PROJECT_TARGET})
+    # endif()
 
     if(NOT DEFINED PD_PROJECT_NAME)
         string(REGEX REPLACE "(.*)/" "" THIS_FOLDER_NAME_TILDE "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -107,16 +115,25 @@ function(add_pd_external)
         )
     endforeach()
 
+    foreach(data_file ${PD_DATA_FILES})
+        file(COPY ${data_file}  
+            DESTINATION ${EXTERNAL_DIR}
+        )
+    endforeach()
 
+    if (NOT DEFINED PD_FLOATSIZE)
+        set(PD_FLOATSIZE 32)
+    elseif(NOT (PD_FLOATSIZE EQUAL 64 OR PD_FLOATSIZE EQUAL 32))
+        message(FATAL_ERROR "PD_FLOATSIZE must be 32 or 64")
+    endif()
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         set_target_properties(${PD_PROJECT_NAME} PROPERTIES SUFFIX ".pd_darwin")
-    elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        set_target_properties(${PD_PROJECT_NAME} PROPERTIES SUFFIX ".pd_windows")
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set_target_properties(${PD_PROJECT_NAME} PROPERTIES SUFFIX ".pd_linux")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set_target_properties(${PD_PROJECT_NAME} PROPERTIES SUFFIX ".dll")
     endif()
-
 
     target_include_directories(
         ${PD_PROJECT_NAME}
@@ -130,8 +147,7 @@ function(add_pd_external)
         ${PD_PROJECT_NAME}
         PRIVATE
         ${PD_COMPILE_DEFINITIONS}
-        TARGET_IS_PD=1
-        PD_FLOATSIZE=32
+        PD_FLOATSIZE=${PD_FLOATSIZE}
         $<$<PLATFORM_ID:Darwin>:NDEBUG>
         $<$<PLATFORM_ID:Darwin>:UNIX>
         $<$<PLATFORM_ID:Darwin>:MACOSX>

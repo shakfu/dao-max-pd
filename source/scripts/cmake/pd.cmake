@@ -6,9 +6,9 @@ endif()
 # ╭──────────────────────────────────────╮
 # │        Set pd.cmake variables        │
 # ╰──────────────────────────────────────╯
-set(PDCMAKE_DIR
-    ${CMAKE_CURRENT_LIST_DIR}
-    CACHE STRING "PATH where is located pd.cmake file")
+# set(PDCMAKE_DIR
+#     ${CMAKE_CURRENT_LIST_DIR}
+#     CACHE STRING "PATH where is located pd.cmake file")
 
 set(PD_FLOATSIZE
     32
@@ -351,7 +351,7 @@ function(pd_add_external PD_EXTERNAL_NAME EXTERNAL_SOURCES)
         if(NAME_HAS_DOT EQUAL -1)
             string(REPLACE "~" "_tilde" EXPORT_FUNCTION "${PD_EXTERNAL_NAME}_setup")
         else()
-            string(REPLACE "." "0x2e" TEMP_NAME "${PD_EXTERNAL_NAMEs}")
+            string(REPLACE "." "0x2e" TEMP_NAME "${PD_EXTERNAL_NAME}")
             string(REPLACE "~" "_tilde" EXPORT_FUNCTION "setup_${TEMP_NAME}")
         endif()
         set_property(

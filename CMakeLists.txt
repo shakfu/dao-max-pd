@@ -26,8 +26,10 @@ endif()
 
 # set(PDCMAKE_DIR ${CMAKE_SOURCE_DIR}/source/scripts/cmake CACHE PATH "Path to pd.cmake")
 # set(PD_INSTALL_LIBS OFF)
-# set(PD_SOURCES_PATH ${CMAKE_SOURCE_DIR}/source/include)
-# include(${PDCMAKE_DIR}/pd.cmake)
+# set(PD_SOURCES_PATH ${CMAKE_SOURCE_DIR}/source/include CACHE PATH "pd sources path" FORCE)
+# set(PDLIBDIR ${CMAKE_SOURCE_DIR}/externals/pd CACHE PATH "" FORCE)
+# set(PD_INSTALL_LIBS True CACHE BOOL "" FORCE)
+# include(${CMAKE_SOURCE_DIR}/source/scripts/cmake/pd.cmake)
 
 include(${CMAKE_SOURCE_DIR}/source/scripts/cmake/fn_add_max_external.cmake)
 include(${CMAKE_SOURCE_DIR}/source/scripts/cmake/fn_add_pd_external.cmake)
