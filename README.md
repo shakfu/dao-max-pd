@@ -8,9 +8,11 @@ This WIP fork revises the old structure to exclusively use `cmake` for builds an
 
 Changes:
 
-- droped 32-bit `multy~`, and renamed `multy64~` to `multy~`
+- Dropped common files and headers.. This is becoming too unweildy as Max and PD evolve.
 
-- disabled building of Max external for `cartopol~` and `poltocar~` as there are already Max builtins
+- Dropped 32-bit `multy~`, and renamed `multy64~` to `multy~`
+
+- Dropped Max version of `cartopol~` and `poltocar~` as there are already Max builtins
 
 
 

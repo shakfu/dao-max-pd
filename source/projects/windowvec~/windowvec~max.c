@@ -1,5 +1,41 @@
-/* Common header files ********************************************************/
-#include "windowvec~common.h"
+#include "ext.h"
+#include "z_dsp.h"
+#include "ext_obex.h"
+
+#include <math.h>
+#include <stdlib.h>
+
+/* The global variables *******************************************************/
+#define TWOPI 6.2831853071796
+
+/* The object structure *******************************************************/
+typedef struct _windowvec {
+    t_pxobject obj;
+    float fs;
+
+    float* window;
+    int vecsize;
+} t_windowvec;
+
+/* The arguments/inlets/outlets/vectors indexes *******************************/
+enum ARGUMENTS { NONE };
+enum INLETS { I_INPUT, NUM_INLETS };
+enum OUTLETS { O_OUTPUT, NUM_OUTLETS };
+enum DSP { PERFORM, OBJECT,
+           INPUT1, OUTPUT1,
+           VECTOR_SIZE, NEXT };
+
+/* The class pointer **********************************************************/
+static t_class *windowvec_class;
+
+/* Function prototypes ********************************************************/
+void *windowvec_common_new(t_windowvec *x, short argc, t_atom *argv);
+void windowvec_free(t_windowvec *x);
+void windowvec_dsp64(t_windowvec* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
+void windowvec_perform64(t_windowvec* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
+
+/******************************************************************************/
+
 
 /* Function prototypes ********************************************************/
 void *windowvec_new(t_symbol *s, short argc, t_atom *argv);
@@ -47,13 +83,6 @@ void *windowvec_new(t_symbol *s, short argc, t_atom *argv)
     return windowvec_common_new(x, argc, argv);
 }
 
-/******************************************************************************/
-
-
-
-
-
-
 /* The 'float' method *********************************************************/
 void windowvec_float(t_windowvec *x, double farg)
 {
@@ -79,3 +108,86 @@ void windowvec_assist(t_windowvec *x, void *b, long msg, long arg, char *dst)
 }
 
 /******************************************************************************/
+
+/* The common 'new instance' routine ******************************************/
+void *windowvec_common_new(t_windowvec *x, short argc, t_atom *argv)
+{
+
+    /* Create inlets */
+    dsp_setup((t_pxobject *)x, NUM_INLETS);
+
+    /* Create signal outlets */
+    outlet_new((t_object *)x, "signal");
+
+    /* Avoid sharing memory among audio vectors */
+    x->obj.z_misc |= Z_NO_INPLACE;
+
+    /* Initialize some state variables */
+    x->fs = sys_getsr();
+
+    x->window = NULL;
+    x->vecsize = 128;
+
+    /* Print message to Max window */
+    post("windowvec~ • Object was created");
+
+    /* Return a pointer to the new object */
+    return x;
+}
+
+/* The 'free instance' routine ************************************************/
+void windowvec_free(t_windowvec *x)
+{
+    /* Remove the object from the DSP chain */
+    dsp_free((t_pxobject *)x);
+
+    /* Free allocated dynamic memory */
+    if (x->window != NULL) {
+        free(x->window);
+    }
+
+    /* Print message to Max window */
+    post("windowvec~ • Memory was freed");
+}
+
+/* The 'DSP' method ***********************************************************/
+
+void windowvec_dsp64(t_windowvec* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
+{
+    if (x->vecsize != samplerate) {
+        x->vecsize = samplerate;
+
+        int bytesize = x->vecsize * sizeof(float);
+        if (x->window == NULL) {
+            x->window = (float *)malloc(bytesize);
+        } else {
+            x->window = (float *)realloc(x->window, bytesize);
+        }
+
+        for (int ii = 0; ii < x->vecsize; ii++) {
+            x->window[ii] = -0.5 * cos(TWOPI * ii / (float)x->vecsize) + 0.5;
+        }
+    }
+
+    /* Attach the object to the DSP chain */
+    object_method(dsp64, gensym("dsp_add64"), x, windowvec_perform64, 0, NULL);
+
+    /* Print message to Max window */
+    post("windowvec~ • Executing 64-bit perform routine");
+}
+
+void windowvec_perform64(t_windowvec* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
+{
+    t_double* input = ins[0];
+    t_double* output = outs[0];
+    int n = sampleframes;
+
+    /* Load state variables */
+    float *window = x->window;
+    // t_double vecsize = x->vecsize;
+
+    /* Perform the DSP loop */
+    for (int ii = 0; ii < n; ii++) {
+        output[ii] = input[ii] * window[ii];
+    }
+}
