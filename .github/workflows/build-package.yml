@@ -45,7 +45,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: win64-externals
-        path: externals/*.mxe64
+        path: |
+          externals/*.mxe64
+          externals/pd/**/*.dll
         retention-days: 1
 
   build-macos:
@@ -69,7 +71,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: macos-externals
-        path: externals/*.mxo
+        path: |
+          externals/*.mxo
+          externals/pd/**/*.pd_darwin
         retention-days: 1
 
   build-package:
