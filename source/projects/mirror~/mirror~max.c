@@ -1,7 +1,23 @@
-/* Common header files ********************************************************/
-#include "mirror~common.h"
+
+#include "ext.h"
+#include "z_dsp.h"
+#include "ext_obex.h"
+
+/* The global variables *******************************************************/
+#define GAIN 0.1
+
+/* The object structure *******************************************************/
+typedef struct _mirror {
+	t_pxobject obj;
+} t_mirror;
+
+/* The class pointer **********************************************************/
+static t_class *mirror_class;
 
 /* Function prototypes ********************************************************/
+void mirror_dsp64(t_mirror* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
+void mirror_perform64(t_mirror* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
+
 void *mirror_new(void);
 void mirror_free(t_mirror *x);
 void mirror_assist(t_mirror *x, void *b, long msg, long arg, char *dst);
@@ -84,4 +100,27 @@ void mirror_assist(t_mirror *x, void *b, long msg, long arg, char *dst)
 	}
 }
 
-/******************************************************************************/
+
+/* The 'DSP/perform' arguments list *******************************************/
+enum DSP {PERFORM, OBJECT, INPUT_VECTOR, OUTPUT_VECTOR, VECTOR_SIZE, NEXT};
+
+
+void mirror_dsp64(t_mirror* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
+{
+    post("mirror~ • Executing 64-bit perform routine");
+
+    object_method(dsp64, gensym("dsp_add64"), x, mirror_perform64, 0, NULL);
+}
+
+void mirror_perform64(t_mirror* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
+{
+    t_double* inL = ins[0];
+    t_double* outL = outs[0];
+    int n = sampleframes;
+
+    while (n--) {
+        *outL++ = GAIN * *inL++;
+    }
+}
+
+
