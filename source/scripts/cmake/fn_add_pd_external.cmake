@@ -33,8 +33,8 @@ function(add_pd_external)
     )
 
     if(NOT DEFINED PD_PROJECT_NAME)
-        string(REGEX REPLACE "(.*)/" "" THIS_FOLDER_NAME "${CMAKE_CURRENT_SOURCE_DIR}")
-        string(REPLACE "~" "_tilde" THIS_FOLDER_NAME "${THIS_FOLDER_NAME}")
+        string(REGEX REPLACE "(.*)/" "" THIS_FOLDER_NAME_TILDE "${CMAKE_CURRENT_SOURCE_DIR}")
+        string(REPLACE "~" "_tilde" THIS_FOLDER_NAME "${THIS_FOLDER_NAME_TILDE}")
         string(REPLACE "_tilde" "" STEM "${THIS_FOLDER_NAME}")
         project(${THIS_FOLDER_NAME})
 
@@ -97,7 +97,7 @@ function(add_pd_external)
         ${PD_PROJECT_NAME}
         PROPERTIES
         PREFIX ""
-        OUTPUT_NAME "${PROJECT_NAME}"
+        OUTPUT_NAME "${THIS_FOLDER_NAME_TILDE}"
         LIBRARY_OUTPUT_DIRECTORY ${EXTERNAL_DIR}
     )
 
