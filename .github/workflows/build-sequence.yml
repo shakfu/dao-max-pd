@@ -47,7 +47,7 @@ jobs:
         name: win64-externals
         path: |
           externals/*.mxe64
-          externals/pd/*.dll
+          externals/pd/**/*.dll
         retention-days: 1
 
 
