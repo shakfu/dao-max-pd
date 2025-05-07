@@ -1,18 +1,7 @@
-name: build-sequence
+name: build-windows
 on:
   workflow_dispatch:
     inputs:
-      macos_version:
-        type: choice
-        description: Select MacOS version
-        default: macos-14
-        required: true
-        options:
-          - macos-latest
-          - macos-15
-          - macos-14
-          - macos-13
-
       windows_version:
         type: choice
         description: Select Windows version
@@ -41,42 +30,8 @@ jobs:
         cmake ..
         cmake --build . --config Release
 
-    - name: upload win64 externals
+    - name: upload windows package
       uses: actions/upload-artifact@v4
-      with:
-        name: win64-externals
-        path: externals/*.mxe64
-        retention-days: 1
-
-
-  build-macos:
-    runs-on: ${{ github.event.inputs.macos_version }}
-    needs: [build-windows]
-    steps:
-
-    - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-        fetch-depth: '0'
-
-    - name: Build externals
-      run: |
-        mkdir -p build
-        cd build
-        cmake .. -GXcode
-        cmake --build . --config Release
-
-    - name: Download Windows externals
-      uses: actions/download-artifact@v4
-      with:
-        name: win64-externals
-        path: externals
-        merge-multiple: true
-
-    - name: display externals
-      run: ls -R externals
-
-    - uses: actions/upload-artifact@v4
       with:
         name: dao-max-pd
         path: |
