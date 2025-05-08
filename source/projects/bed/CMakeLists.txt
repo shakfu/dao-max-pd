@@ -3,7 +3,7 @@ add_pd_external(
         bed_pd.c
 )
 
-if(CMAKE_SYSTEM_NAME NOT STREQUAL "Linux")
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
     include(${CMAKE_SOURCE_DIR}/source/max-sdk-base/script/max-pretarget.cmake)
 
     add_max_external(

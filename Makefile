@@ -4,17 +4,19 @@ PACKAGE := "$(HOME)/Documents/Max\ $(MAX_VERSION)/Packages/$(PACKAGE_NAME)"
 
 
 
-.PHONY: all build macos macos_universal windows dev clean reset sync link setup
+.PHONY: all build linux macos macos_universal windows dev clean reset sync link setup
 
 all: build
 
-build: macos
-
-windows:
+build:
 	@mkdir -p build && \
 		cd build && \
 		cmake .. && \
 		cmake --build . --config Release
+
+windows: build
+
+linux: build
 
 macos:
 	@mkdir -p build && \
@@ -27,12 +29,6 @@ macos_universal:
 	@mkdir -p build && \
 		cd build && \
 		cmake .. -GXcode -DMACOS_UNIVERSAL=ON && \
-		cmake --build . --config Release
-
-dev:
-	@mkdir -p build && \
-		cd build && \
-		cmake .. && \
 		cmake --build . --config Release
 
 clean:

@@ -33,7 +33,7 @@ git submodule init
 git submodule update
 ```
 
-Then to build, on macOS, type `make` in the root of the project or
+Then to build, on macOS, type `make macos` in the root of the project or
 
 ```sh
 mkdir -p build
@@ -43,6 +43,15 @@ cmake --build . --config Release
 ```
 
 For Windows, type `make windows` in the root of the project if `make.exe` is available or
+
+```sh
+mkdir -p build
+cd build
+cmake ..
+cmake --build . --config Release
+```
+
+For Linux, type `make linux` (to build the puredata externals) or
 
 ```sh
 mkdir -p build

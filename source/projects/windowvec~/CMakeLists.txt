@@ -3,11 +3,13 @@ add_pd_external(
 		windowvec~pd.c
 )
 
-include(${CMAKE_SOURCE_DIR}/source/max-sdk-base/script/max-pretarget.cmake)
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	include(${CMAKE_SOURCE_DIR}/source/max-sdk-base/script/max-pretarget.cmake)
 
-add_max_external(
-	PROJECT_SOURCE
-		windowvec~max.c
-)
+	add_max_external(
+		PROJECT_SOURCE
+			windowvec~max.c
+	)
 
-include(${CMAKE_SOURCE_DIR}/source/max-sdk-base/script/max-posttarget.cmake)
+	include(${CMAKE_SOURCE_DIR}/source/max-sdk-base/script/max-posttarget.cmake)
+endif()
