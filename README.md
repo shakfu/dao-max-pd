@@ -4,11 +4,7 @@ This repository is a collection of Max/MSP and Pd externals developed from the e
 
 ## FORK NOTES
 
-This friend WIP fork make the following changes to the original project:
-
- with the following change to  use `cmake` for builds and also aims to update 32bit externals to 64bit.
-
-Changes:
+This friend WIP fork made the following changes to the original project:
 
 - Changed build system to exclusively use `cmake`.
 
