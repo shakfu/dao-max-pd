@@ -15,8 +15,9 @@
 #define SCRUBBER_EMPTY 0
 #define SCRUBBER_FULL 1
 
-#define PI 3.1415926535898
-#define TWOPI 6.2831853071796
+// already defined by c74support/msp-includes/z_dsp.h
+// #define PI 3.1415926535898
+// #define TWOPI 6.2831853071796
 
 /* The object structure
  * *******************************************************/

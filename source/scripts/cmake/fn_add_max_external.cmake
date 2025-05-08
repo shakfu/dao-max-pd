@@ -102,7 +102,6 @@ function(add_max_external)
         $<$<PLATFORM_ID:Darwin>:-Wmost>
         $<$<PLATFORM_ID:Darwin>:-Wno-four-char-constants>
         $<$<PLATFORM_ID:Darwin>:-Wno-unknown-pragmas>
-        $<$<PLATFORM_ID:Darwin>:-Wdeclaration-after-statement>
         $<$<PLATFORM_ID:Darwin>:-fvisibility=hidden>
     )
 

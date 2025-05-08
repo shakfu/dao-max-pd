@@ -57,6 +57,7 @@ jobs:
         name: win64-externals
         path: |
           externals/*.mxe64
+          externals/pd/**/*.windows-*.dll
           externals/pd/**/*.dll
         retention-days: 1
 
@@ -83,6 +84,7 @@ jobs:
         name: macos-externals
         path: |
           externals/*.mxo
+          externals/pd/**/*.darwin-*
           externals/pd/**/*.pd_darwin
         retention-days: 1
 
@@ -109,6 +111,7 @@ jobs:
         name: linux-externals
         path: |
           externals/pd/**/*.pd
+          externals/pd/**/*.linux-*
           externals/pd/**/*.pd_linux
         retention-days: 1
 

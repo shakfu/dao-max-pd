@@ -41,7 +41,9 @@ sign:
 	@codesign --sign - --timestamp --force externals/*.mxo/**/MacOS/*
 	@/usr/bin/xattr -r -d com.apple.quarantine externals/*.mxo
 	@codesign --sign - --timestamp --force externals/pd/**/*.pd_darwin
+	@codesign --sign - --timestamp --force externals/pd/**/*.darwin-*
 	@/usr/bin/xattr -r -d com.apple.quarantine externals/pd/**/*.pd_darwin
+	@/usr/bin/xattr -r -d com.apple.quarantine externals/pd/**/*.darwin-*
 
 sync:
 	@echo "updating submodule(s)"

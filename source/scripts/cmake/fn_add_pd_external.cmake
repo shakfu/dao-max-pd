@@ -127,10 +127,7 @@ function(add_pd_external)
 
     if (NOT DEFINED PD_FLOATSIZE)
         set(PD_FLOATSIZE 32)
-    elseif(NOT (PD_FLOATSIZE EQUAL 64 OR PD_FLOATSIZE EQUAL 32))
-        message(FATAL_ERROR "PD_FLOATSIZE must be 32 or 64")
     endif()
-
 
     if(GENERIC_EXT)
         if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
