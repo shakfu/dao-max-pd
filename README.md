@@ -4,9 +4,21 @@ This repository is a collection of Max/MSP and Pd externals developed from the e
 
 ## FORK NOTES
 
-This WIP fork revises the old structure to exclusively use `cmake` for builds and also aims to update 32bit externals to 64bit.
+This friend WIP fork make the following changes to the original project:
+
+ with the following change to  use `cmake` for builds and also aims to update 32bit externals to 64bit.
 
 Changes:
+
+- Changed build system to exclusively use `cmake`.
+
+- Changed Max/MSP externals from 32bit dsp/perform methods to 64bit methods.
+
+- Changed folder structure to a Max package structure.
+
+- Added `max-sdk-base` as a git submodule dependency.
+
+- Added puredata `m_pd.h` header to `source/include` folder.
 
 - Dropped common files and headers.. This is becoming too unweildy as Max and PD evolve.
 
@@ -14,9 +26,18 @@ Changes:
 
 - Dropped Max version of `cartopol~` and `poltocar~` as there are already Max builtins
 
+- Added github action to build all externals.
+
 ### Building
 
-For macOS, `make` or
+Before buildind Max/MSP externals, you will need to do the following unless you have already cloned the repo recursively:
+
+```sh
+git submodule init
+git submodule update
+```
+
+Then to build, on macOS, type `make` in the root of the project or
 
 ```sh
 mkdir -p build
@@ -25,7 +46,7 @@ cmake .. -GXcode
 cmake --build . --config Release
 ```
 
-For Windows, `make windows` if `make.exe` is available or
+For Windows, type `make windows` in the root of the project if `make.exe` is available or
 
 ```sh
 mkdir -p build
