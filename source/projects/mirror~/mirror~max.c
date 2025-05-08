@@ -88,14 +88,14 @@ void mirror_assist(t_mirror *x, void *b, long msg, long arg, char *dst)
 	/* Document inlet functions */
 	if (msg == ASSIST_INLET) {
 		switch (arg) {
-			case INPUT1: sprintf(dst, "(signal) Input"); break;
+			case INPUT1: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Input"); break;
 		}
 	}
 	
 	/* Document outlet functions */
 	else if (msg == ASSIST_OUTLET) {
 		switch (arg) {
-			case OUTPUT1: sprintf(dst, "(signal) Output"); break;
+			case OUTPUT1: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Output"); break;
 		}
 	}
 }

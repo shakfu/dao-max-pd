@@ -95,16 +95,16 @@ void moogvcf_assist(t_moogvcf *x, void *b, long msg, long arg, char *dst)
     /* Document inlet functions */
     if (msg == ASSIST_INLET) {
         switch (arg) {
-            case I_INPUT: sprintf(dst, "(signal) Input"); break;
-            case I_FREQUENCY: sprintf(dst, "(signal) Cutoff frequency"); break;
-            case I_RESONANCE: sprintf(dst, "(signal) Resonance"); break;
+            case I_INPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Input"); break;
+            case I_FREQUENCY: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Cutoff frequency"); break;
+            case I_RESONANCE: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Resonance"); break;
         }
     }
 
     /* Document outlet functions */
     else if (msg == ASSIST_OUTLET) {
         switch (arg) {
-            case O_OUTPUT: sprintf(dst, "(signal) Output"); break;
+            case O_OUTPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Output"); break;
         }
     }
 }
@@ -149,7 +149,7 @@ void moogvcf_free(t_moogvcf *x)
 void moogvcf_dsp64(t_moogvcf* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
 {
     if (samplerate == 0) {
-        error("moogvcf~ • Sampling rate is equal to zero!");
+        pd_error(x, "moogvcf~ • Sampling rate is equal to zero!");
         return;
     }
 

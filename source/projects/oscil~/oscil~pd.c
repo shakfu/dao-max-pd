@@ -1,5 +1,4 @@
 #include "m_pd.h"
-#define error post
 
 #include <math.h>
 
@@ -195,7 +194,7 @@ void *new_memory(long nbytes)
     void *pointer = getbytes(nbytes);
 
     if (pointer == NULL) {
-        error("oscil~ • Cannot allocate memory for this object");
+        pd_error(NULL, "oscil~ • Cannot allocate memory for this object");
         return NULL;
     }
     return pointer;
@@ -265,7 +264,7 @@ void *oscil_common_new(t_oscil *x, short argc, t_atom *argv)
         x->waveform = gensym("");
         oscil_build_sine(x);
         
-        error("oscil~ • Invalid argument: Waveform set to %s", x->waveform->s_name);
+        pd_error(x, "oscil~ • Invalid argument: Waveform set to %s", x->waveform->s_name);
     }
     
     /* Print message to Max window */

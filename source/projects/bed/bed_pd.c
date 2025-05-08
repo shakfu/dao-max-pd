@@ -4,8 +4,6 @@
 #include <string.h>
 #include "stdlib.h"
 
-#define error post
-
 /* The class pointer **********************************************************/
 static t_class *bed_class;
 
@@ -168,7 +166,7 @@ void bed_bufname(t_bed *x, t_symbol *name)
 void bed_normalize(t_bed *x, t_symbol *msg, short argc, t_atom *argv)
 {
     if (argc > 1) {
-        error("bed • The message must have at most two members");
+        pd_error(x, "bed • The message must have at most two members");
         return;
     }
 
@@ -195,7 +193,7 @@ void bed_normalize(t_bed *x, t_symbol *msg, short argc, t_atom *argv)
     }
 
     if (x->undo_samples == NULL) {
-        error("bed • Cannot allocate memory for undo");
+        pd_error(x, "bed • Cannot allocate memory for undo");
         x->can_undo = 0;
         return;
     } else {
@@ -255,7 +253,7 @@ void bed_fadein(t_bed *x, t_floatarg fadetime)
     }
 
     if (x->undo_samples == NULL) {
-        error("bed • Cannot allocate memory for undo");
+        pd_error(x, "bed • Cannot allocate memory for undo");
         x->can_undo = 0;
         return;
     } else {
@@ -300,7 +298,7 @@ void bed_fadeout(t_bed *x, t_floatarg fadetime)
     }
 
     if (x->undo_samples == NULL) {
-        error("bed • Cannot allocate memory for undo");
+        pd_error(x, "bed • Cannot allocate memory for undo");
         x->can_undo = 0;
         return;
     } else {
@@ -348,7 +346,7 @@ void bed_cut(t_bed *x, t_floatarg start, t_floatarg end)
     }
 
     if (x->undo_samples == NULL) {
-        error("bed • Cannot allocate memory for undo");
+        pd_error(x, "bed • Cannot allocate memory for undo");
         x->can_undo = 0;
         return;
     } else {
@@ -364,7 +362,7 @@ void bed_cut(t_bed *x, t_floatarg start, t_floatarg end)
     long buffersize = bufferframes * sizeof(float);
     float *local_buffer = getbytes(buffersize);
     if (local_buffer == NULL) {
-        error("bed • Cannot allocate memory for undo");
+        pd_error(x, "bed • Cannot allocate memory for undo");
         x->can_undo = 0;
         return;
     } else {
@@ -441,7 +439,7 @@ void bed_reverse(t_bed *x)
     }
 
     if (x->undo_samples == NULL) {
-        error("bed • Cannot allocate memory for undo");
+        pd_error(x, "bed • Cannot allocate memory for undo");
         x->can_undo = 0;
         return;
     } else {
@@ -483,7 +481,7 @@ void bed_ring_modulation(t_bed *x, t_floatarg frequency)
     }
 
     if (x->undo_samples == NULL) {
-        error("bed • Cannot allocate memory for undo");
+        pd_error(x, "bed • Cannot allocate memory for undo");
         x->can_undo = 0;
         return;
     } else {
@@ -524,7 +522,7 @@ void bed_shuffle_n_segments(t_bed *x, t_floatarg segments)
     }
 
     if (x->undo_samples == NULL) {
-        error("bed • Cannot allocate memory for undo");
+        pd_error(x, "bed • Cannot allocate memory for undo");
         x->can_undo = 0;
         return;
     } else {
@@ -606,7 +604,7 @@ void bed_undo(t_bed *x)
         long buffersize = bufferframes * sizeof(float);
         float *local_buffer = getbytes(buffersize);
         if (local_buffer == NULL) {
-            error("bed • Cannot allocate memory for undo");
+            pd_error(x, "bed • Cannot allocate memory for undo");
             x->can_undo = 0;
             return;
         } else {

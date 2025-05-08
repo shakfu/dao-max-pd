@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 /* The global variables *******************************************************/
-#define TWOPI 6.2831853071796
+
 
 /* The object structure *******************************************************/
 typedef struct _windowvec {
@@ -95,14 +95,14 @@ void windowvec_assist(t_windowvec *x, void *b, long msg, long arg, char *dst)
     /* Document inlet functions */
     if (msg == ASSIST_INLET) {
         switch (arg) {
-            case I_INPUT: sprintf(dst, "(signal) Input"); break;
+            case I_INPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Input"); break;
         }
     }
 
     /* Document outlet functions */
     else if (msg == ASSIST_OUTLET) {
         switch (arg) {
-            case O_OUTPUT: sprintf(dst, "(signal) Output"); break;
+            case O_OUTPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Output"); break;
         }
     }
 }
@@ -154,10 +154,12 @@ void windowvec_free(t_windowvec *x)
 
 void windowvec_dsp64(t_windowvec* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
 {
+    int bytesize = 0;
+
     if (x->vecsize != samplerate) {
         x->vecsize = samplerate;
 
-        int bytesize = x->vecsize * sizeof(float);
+        bytesize = x->vecsize * sizeof(float);
         if (x->window == NULL) {
             x->window = (float *)malloc(bytesize);
         } else {

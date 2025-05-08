@@ -126,16 +126,16 @@ void cleaner_assist(t_cleaner *x, void *b, long msg, long arg, char *dst)
     /* Document inlet functions */
     if (msg == ASSIST_INLET) {
         switch (arg) {
-            case I_INPUT: sprintf(dst, "(signal) Input"); break;
-            case I_THRESHOLD: sprintf(dst, "(signal/float) Threshold"); break;
-            case I_ATTENUATION: sprintf(dst, "(signal/float) Attenuation"); break;
+            case I_INPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Input"); break;
+            case I_THRESHOLD: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal/float) Threshold"); break;
+            case I_ATTENUATION: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal/float) Attenuation"); break;
         }
     }
 
     /* Document outlet functions */
     else if (msg == ASSIST_OUTLET) {
         switch (arg) {
-            case O_OUTPUT: sprintf(dst, "(signal) Output"); break;
+            case O_OUTPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Output"); break;
         }
     }
 }

@@ -12,6 +12,10 @@ This friend WIP fork made the following changes to the original project:
 
 - Changed folder structure to a Max package structure.
 
+- Changed use of `sprintf(dst, ` in `assist` methods of Max/MSP externals to `snprintf_zero(dst, ASSIST_MAX_STRING_LEN, `.
+
+- Changed use of `error()` in Pd externals to `pd_error()`.
+
 - Added `max-sdk-base` as a git submodule dependency.
 
 - Added puredata `m_pd.h` header to `source/include` folder.
@@ -20,7 +24,7 @@ This friend WIP fork made the following changes to the original project:
 
 - Dropped 32-bit `multy~`, and renamed `multy64~` to `multy~`
 
-- Dropped Max version of `cartopol~` and `poltocar~` as there are already Max builtins
+- Dropped Max version of `cartopol~` and `poltocar~` as there are already Max builtins.
 
 - Added github action to build all externals.
 

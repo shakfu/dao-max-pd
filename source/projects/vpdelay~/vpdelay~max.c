@@ -144,16 +144,16 @@ void vpdelay_assist(t_vpdelay *x, void *b, long msg, long arg, char *dst)
 	/* Document inlet functions */
 	if (msg == ASSIST_INLET) {
 		switch (arg) {
-			case I_INPUT: sprintf(dst, "(signal) Input"); break;
-			case I_DELAY: sprintf(dst, "(signal/float) Delay"); break;
-			case I_FEEDBACK: sprintf(dst, "(signal/float) Feedback"); break;
+			case I_INPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Input"); break;
+			case I_DELAY: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal/float) Delay"); break;
+			case I_FEEDBACK: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal/float) Feedback"); break;
 		}
 	}
 	
 	/* Document outlet functions */
 	else if (msg == ASSIST_OUTLET) {
 		switch (arg) {
-			case O_OUTPUT: sprintf(dst, "(signal) Output"); break;
+			case O_OUTPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Output"); break;
 		}
 	}
 }

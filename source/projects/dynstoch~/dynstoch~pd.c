@@ -1,5 +1,4 @@
-#include "m_pd.h"
-#define error post
+#include "m_pd.h"`
 
 #include <math.h>
 #include <stdlib.h>
@@ -134,7 +133,7 @@ void *dynstoch_common_new(t_dynstoch *x, short argc, t_atom *argv)
 
     if (x->amplitudes == NULL ||
         x->durations == NULL) {
-        error("dynstoch~ • Cannot allocate memory for this object");
+        pd_error(x, "dynstoch~ • Cannot allocate memory for this object");
         return NULL;
     }
 
@@ -170,11 +169,11 @@ void dynstoch_ampdev(t_dynstoch *x, float ampdev)
 {
     if (ampdev < MINIMUM_AMP_DEV) {
         ampdev = MINIMUM_AMP_DEV;
-        error("dynstoch~ • Invalid attribute: Amplitude deviation set to %.4f", MINIMUM_AMP_DEV);
+        pd_error(x, "dynstoch~ • Invalid attribute: Amplitude deviation set to %.4f", MINIMUM_AMP_DEV);
     }
     if (ampdev > MAXIMUM_AMP_DEV) {
         ampdev = MAXIMUM_AMP_DEV;
-        error("dynstoch~ • Invalid attribute: Amplitude deviation set to %.4f", MAXIMUM_AMP_DEV);
+        pd_error(x, "dynstoch~ • Invalid attribute: Amplitude deviation set to %.4f", MAXIMUM_AMP_DEV);
     }
     x->amplitude_deviation = ampdev;
 }
@@ -183,7 +182,7 @@ void dynstoch_durdev(t_dynstoch *x, float durdev)
 {
     if (durdev < MINIMUM_DUR_DEV) {
         durdev = MINIMUM_DUR_DEV;
-        error("dynstoch~ • Invalid attribute: Duration deviation set to %.4f", MINIMUM_DUR_DEV);
+        pd_error(x, "dynstoch~ • Invalid attribute: Duration deviation set to %.4f", MINIMUM_DUR_DEV);
     }
     x->duration_deviation = durdev;
 }
@@ -322,7 +321,7 @@ void dynstoch_recalculate(t_dynstoch *x)
 void dynstoch_dsp(t_dynstoch *x, t_signal **sp, short *count)
 {
     if (sp[0]->s_sr == 0) {
-        error("dynstoch~ • Sampling rate is equal to zero!");
+        pd_error(x, "dynstoch~ • Sampling rate is equal to zero!");
         return;
     }
 

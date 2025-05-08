@@ -212,15 +212,15 @@ void dynstoch_assist(t_dynstoch *x, void *b, long msg, long arg, char *dst)
     /* Document inlet functions */
     if (msg == ASSIST_INLET) {
         switch (arg) {
-            case I_INPUT: sprintf(dst, "(messages) Object's messages"); break;
+            case I_INPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(messages) Object's messages"); break;
         }
     }
 
     /* Document outlet functions */
     else if (msg == ASSIST_OUTLET) {
         switch (arg) {
-            case O_OUTPUT: sprintf(dst, "(signal) Output"); break;
-            case O_FREQUENCY: sprintf(dst, "(signal) Frequency"); break;
+            case O_OUTPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Output"); break;
+            case O_FREQUENCY: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Frequency"); break;
         }
     }
 }

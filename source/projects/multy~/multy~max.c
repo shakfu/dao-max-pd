@@ -96,15 +96,15 @@ void multy_assist(t_multy *x, void *b, long msg, long arg, char *dst)
     /* Document inlet functions */
     if (msg == ASSIST_INLET) {
         switch (arg) {
-            case I_INPUT1: sprintf(dst, "(signal) Input 1"); break;
-            case I_INPUT2: sprintf(dst, "(signal) Input 2"); break;
+            case I_INPUT1: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Input 1"); break;
+            case I_INPUT2: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Input 2"); break;
         }
     }
 
     /* Document outlet functions */
     else if (msg == ASSIST_OUTLET) {
         switch (arg) {
-            case O_OUTPUT: sprintf(dst, "(signal) Output"); break;
+            case O_OUTPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Output"); break;
         }
     }
 }

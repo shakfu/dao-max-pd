@@ -1,5 +1,4 @@
 #include "m_pd.h"
-#define error post
 
 #include <math.h>
 #include <stdlib.h>
@@ -107,7 +106,7 @@ void moogvcf_free(t_moogvcf *x)
 void moogvcf_dsp(t_moogvcf *x, t_signal **sp, short *count)
 {
     if (sp[0]->s_sr == 0) {
-        error("moogvcf~ • Sampling rate is equal to zero!");
+        pd_error(x, "moogvcf~ • Sampling rate is equal to zero!");
         return;
     }
 

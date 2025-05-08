@@ -309,14 +309,14 @@ void oscil_attributes_assist(t_oscil_attributes *x, void *b, long msg, long arg,
     /* Document inlet functions */
     if (msg == ASSIST_INLET) {
         switch (arg) {
-            case I_FREQUENCY: sprintf(dst, "(signal/float) Frequency"); break;
+            case I_FREQUENCY: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal/float) Frequency"); break;
         }
     }
     
     /* Document outlet functions */
     else if (msg == ASSIST_OUTLET) {
         switch (arg) {
-            case O_OUTPUT: sprintf(dst, "(signal) Output"); break;
+            case O_OUTPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Output"); break;
         }
     }
 }

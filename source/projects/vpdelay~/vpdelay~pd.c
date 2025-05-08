@@ -1,5 +1,4 @@
 #include "m_pd.h"
-#define error post
 
 #include <math.h>
 

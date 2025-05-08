@@ -1,5 +1,4 @@
 #include "m_pd.h"
-#define error post
 
 #include <time.h>
 #include <stdlib.h>
@@ -229,7 +228,7 @@ void *new_memory(long nbytes)
     void *pointer = getbytes(nbytes);
 
     if (pointer == NULL) {
-        error("retroseq~ • Cannot allocate memory for this object");
+        pd_error(NULL, "retroseq~ • Cannot allocate memory for this object");
         return NULL;
     }
     return pointer;
@@ -340,11 +339,11 @@ void send_sequence_as_list(int the_length,
 void retroseq_list(t_retroseq *x, t_symbol *msg, short argc, t_atom *argv)
 {
     if (argc < 2) {
-        error("retroseq~ • The sequence must have at least two members");
+        pd_error(x, "retroseq~ • The sequence must have at least two members");
         return;
     }
     if (argc % 2) {
-        error("retroseq~ • The sequence must have odd number of members");
+        pd_error(x, "retroseq~ • The sequence must have odd number of members");
         return;
     }
 
@@ -376,7 +375,7 @@ void retroseq_list(t_retroseq *x, t_symbol *msg, short argc, t_atom *argv)
 void retroseq_freqlist(t_retroseq *x, t_symbol *msg, short argc, t_atom *argv)
 {
     if (argc < 2) {
-        error("retroseq~ • The sequence must have at least two members");
+        pd_error(x, "retroseq~ • The sequence must have at least two members");
         return;
     }
 
@@ -400,7 +399,7 @@ void retroseq_freqlist(t_retroseq *x, t_symbol *msg, short argc, t_atom *argv)
 void retroseq_durlist(t_retroseq *x, t_symbol *msg, short argc, t_atom *argv)
 {
     if (argc < 2) {
-        error("retroseq~ • The sequence must have at least two members");
+        pd_error(x, "retroseq~ • The sequence must have at least two members");
         return;
     }
 
@@ -470,7 +469,7 @@ void retroseq_set_tempo(t_retroseq *x, t_symbol *msg, short argc, t_atom *argv)
     }
 
     if (new_tempo_bpm <= 0) {
-        error("retroseq~ • Tempo must be greater than zero");
+        pd_error(x, "retroseq~ • Tempo must be greater than zero");
         return;
     }
 
@@ -505,7 +504,7 @@ void retroseq_set_sustain_amplitude(t_retroseq *x, t_symbol *msg, short argc, t_
 void retroseq_set_adsr(t_retroseq *x, t_symbol *msg, short argc, t_atom *argv)
 {
     if (argc != 4) {
-        error("retroseq~ • The envelope must have four members");
+        pd_error(x, "retroseq~ • The envelope must have four members");
         return;
     }
 
