@@ -67,7 +67,7 @@ function(add_pd_external)
         message(STATUS "PD_PATCH_FILES: ${PD_PATCH_FILES}")
     endif()
 
-    set(DEPS_DIR "${CMAKE_SOURCE_DIR}/build/install")
+    set(PD_DIR "${CMAKE_SOURCE_DIR}/source/pd")
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/externals/pd/${STEM}")
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
@@ -91,7 +91,7 @@ function(add_pd_external)
 
 
     include_directories( 
-        ${CMAKE_SOURCE_DIR}/source/include
+        ${PD_DIR}/include
     )
 
     add_library( 
@@ -167,39 +167,24 @@ function(add_pd_external)
         ${PD_PROJECT_NAME} 
         PRIVATE
         ${PD_LINK_DIRS}
+        $<$<PLATFORM_ID:Windows>:${PD_DIR}/lib>
     )
 
     target_link_options(
         ${PD_PROJECT_NAME}
         PRIVATE
         ${PD_LINK_OPTIONS}
-        # $<$<PLATFORM_ID:Darwin>:-dynamiclib>
         $<$<PLATFORM_ID:Darwin>:-undefined dynamic_lookup>
-        # $<$<PLATFORM_ID:Darwin>:-undefined suppress>
-        # $<$<PLATFORM_ID:Darwin>:-flat_namespace>
-        # $<$<PLATFORM_ID:Darwin>:-bundle>
         $<$<PLATFORM_ID:Linux>:-rdynamic>
         $<$<PLATFORM_ID:Linux>:-shared>
         $<$<PLATFORM_ID:Linux>:-fPIC>
-        $<$<PLATFORM_ID:Windows>:/FORCE:UNRESOLVED>
     )
 
     target_link_libraries(
         ${PD_PROJECT_NAME} 
         PRIVATE
         "${PD_LINK_LIBS}"
-        # "$<$<PLATFORM_ID:Darwin>:-framework CoreAudio>"
-        # "$<$<PLATFORM_ID:Darwin>:-framework CoreMIDI>"
-        # "$<$<PLATFORM_ID:Darwin>:-framework CoreFoundation>"    
-        # "$<$<PLATFORM_ID:Darwin>:-framework IOKit>"
-        # "$<$<PLATFORM_ID:Darwin>:-framework Carbon>"
-        # "$<$<PLATFORM_ID:Darwin>:-framework AppKit>"
-        # "$<$<PLATFORM_ID:Darwin>:-framework Foundation>"
-        # "$<$<PLATFORM_ID:Darwin>:-F/System/Library/PrivateFrameworks>"
-        # "$<$<PLATFORM_ID:Darwin>:-weak_framework MultitouchSupport>"
-        # # $<$<PLATFORM_ID:Darwin>:-lc++>
-        # $<$<PLATFORM_ID:Linux>:-lstdc++>
-        # $<$<PLATFORM_ID:Linux>:-lc>
+        $<$<PLATFORM_ID:Windows>:pd>
         $<$<PLATFORM_ID:Linux,Darwin>:-lm>
     )
 
