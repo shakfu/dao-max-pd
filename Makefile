@@ -3,8 +3,8 @@ PACKAGE_NAME := dao-max-pd
 PACKAGE := "$(HOME)/Documents/Max\ $(MAX_VERSION)/Packages/$(PACKAGE_NAME)"
 
 
-
-.PHONY: all build linux macos macos_universal windows dev clean reset sync link setup
+.PHONY: all build linux macos macos_universal windows dev \
+		clean reset sync link setup sign
 
 all: build
 
@@ -36,6 +36,12 @@ clean:
 
 reset:
 	@rm -rf build externals
+
+sign:
+	@codesign --sign - --timestamp --force externals/*.mxo/**/MacOS/*
+	@/usr/bin/xattr -r -d com.apple.quarantine externals/*.mxo
+	@codesign --sign - --timestamp --force externals/pd/**/*.pd_darwin
+	@/usr/bin/xattr -r -d com.apple.quarantine externals/pd/**/*.pd_darwin
 
 sync:
 	@echo "updating submodule(s)"

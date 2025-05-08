@@ -62,6 +62,12 @@ cmake --build . --config Release
 
 Original `README` continues from here...
 
+### Forking and Building Using Github Actions
+
+If you fork this fork (-:, you can run the included github action, `build-package` which will build Max/MSP externals on MacOS and Windows, and puredata exteransl on MacOS, Windows and Linux and then bundle them together into a package and make it available for download.
+
+If you do this, note that the MacOS externals will be unusable (due to Apple's codesign and notarization rules) unless you copy the downloaded externals folder to this project and run `make sign` which will remove these constraints.
+
 ## Overview
 
 This repository is a collection of Max/MSP and Pd externals developed from the explanations in the book *"Designing Audio Objects for Max/MSP and Pd"* by Eric Lyon.  

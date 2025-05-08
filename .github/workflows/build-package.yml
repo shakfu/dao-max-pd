@@ -150,4 +150,5 @@ jobs:
             patchers
             LICENSE.md
             README.md
+            source/scripts/remove_quarantine.sh
 
