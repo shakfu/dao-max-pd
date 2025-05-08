@@ -140,6 +140,9 @@ jobs:
         path: externals/pd
         merge-multiple: true
 
+    - name: Copy scripts to root
+      run: cp source/scripts/remove_macos_quarantine.sh .
+
     - uses: actions/upload-artifact@v4
       with:
         name: dao-max-pd
@@ -150,5 +153,5 @@ jobs:
             patchers
             LICENSE.md
             README.md
-            source/scripts/remove_quarantine.sh
+            remove_macos_quarantine.sh
 
