@@ -68,26 +68,12 @@ void *cartopol_new(t_symbol *s, short argc, t_atom *argv)
 /* The common 'new instance' routine ******************************************/
 void *cartopol_common_new(t_cartopol *x, short argc, t_atom *argv)
 {
-#ifdef TARGET_IS_MAX
-    /* Create inlets */
-    dsp_setup((t_pxobject *)x, NUM_INLETS);
-
-    /* Create signal outlets */
-    outlet_new((t_object *)x, "signal");
-    outlet_new((t_object *)x, "signal");
-
-    /* Avoid sharing memory among audio vectors */
-    x->obj.z_misc |= Z_NO_INPLACE;
-
-#elif TARGET_IS_PD
     /* Create inlets */
     inlet_new(&x->obj, &x->obj.ob_pd, gensym("signal"), gensym("signal"));
 
     /* Create signal outlets */
     outlet_new(&x->obj, gensym("signal"));
     outlet_new(&x->obj, gensym("signal"));
-
-#endif
 
     /* Print message to Max window */
     post("cartopol~ • Object was created");
@@ -99,11 +85,6 @@ void *cartopol_common_new(t_cartopol *x, short argc, t_atom *argv)
 /* The 'free instance' routine ************************************************/
 void cartopol_free(t_cartopol *x)
 {
-#ifdef TARGET_IS_MAX
-    /* Remove the object from the DSP chain */
-    dsp_free((t_pxobject *)x);
-#endif
-
     /* Print message to Max window */
     post("cartopol~ • Memory was freed");
 }
@@ -141,11 +122,7 @@ t_int *cartopol_perform(t_int *w)
 
     /* Perform the DSP loop */
     int framesize;
-    #ifdef TARGET_IS_MAX
-        framesize = (int)n;
-    #elif TARGET_IS_PD
-        framesize = (int)(n / 2) + 1;
-    #endif
+    framesize = (int)(n / 2) + 1;
 
     float local_real;
     float local_imag;
@@ -158,12 +135,11 @@ t_int *cartopol_perform(t_int *w)
         output_phase[ii] = -atan2(local_imag, local_real);
     }
 
-    #ifdef TARGET_IS_PD
-        for (int ii = framesize; ii < n; ii++) {
-            output_magn[ii] = 0.0;
-            output_phase[ii] = 0.0;
-        }
-    #endif
+    for (int ii = framesize; ii < n; ii++) {
+        output_magn[ii] = 0.0;
+        output_phase[ii] = 0.0;
+    }
+
 
     /* Return the next address in the DSP chain */
     return w + NEXT;

@@ -121,11 +121,7 @@ t_int *poltocar_perform(t_int *w)
 
     /* Perform the DSP loop */
     int framesize;
-    #ifdef TARGET_IS_MAX
-        framesize = (int)n;
-    #elif TARGET_IS_PD
-        framesize = (int)(n / 2) + 1;
-    #endif
+    framesize = (int)(n / 2) + 1;
 
     float local_real;
     float local_imag;

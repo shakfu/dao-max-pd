@@ -190,27 +190,19 @@ void vpdelay_free(t_vpdelay *x)
 void vpdelay_dsp(t_vpdelay *x, t_signal **sp, short *count)
 {
     /* Store signal connection states of inlets */
-    #ifdef TARGET_IS_MAX
-        x->delay_connected = count[A_DELAY];
-        x->feedback_connected = count[A_FEEDBACK];
-    #elif TARGET_IS_PD
-        x->delay_connected = 1;
-        x->feedback_connected = 1;
-    #endif
+    x->delay_connected = 1;
+    x->feedback_connected = 1;
+
 
     /* Adjust to changes in the sampling rate */
     if (x->fs != sp[0]->s_sr) {
         x->fs = sp[0]->s_sr;
         
         x->delay_length = (x->max_delay * 1e-3 * x->fs) + 1;
-        #ifdef TARGET_IS_MAX
-            x->delay_bytes = x->delay_length * sizeof(float);
-            x->delay_line = (float *)sysmem_resizeptr((void *)x->delay_line, x->delay_bytes);
-        #elif TARGET_IS_PD
-            long delay_bytes_old = x->delay_bytes;
-            x->delay_bytes = x->delay_length * sizeof(float);
-            x->delay_line = (float *)resizebytes((void *)x, delay_bytes_old, x->delay_bytes);
-        #endif
+        long delay_bytes_old = x->delay_bytes;
+        x->delay_bytes = x->delay_length * sizeof(float);
+        x->delay_line = (float *)resizebytes((void *)x, delay_bytes_old, x->delay_bytes);
+
         
         if (x->delay_line == NULL) {
             post("vpdelay~ • Cannot reallocate memory for this object");

@@ -56,13 +56,8 @@ static t_class *scrubber_class;
 /* Function prototypes ********************************************************/
 void *scrubber_common_new(t_scrubber *x, short argc, t_atom *argv);
 void scrubber_free(t_scrubber *x);
-#ifdef TARGET_IS_MAX
 void scrubber_dsp64(t_scrubber* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
 void scrubber_perform64(t_scrubber* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
-#elif TARGET_IS_PD
-void scrubber_dsp(t_scrubber *x, t_signal **sp, short *count);
-t_int *scrubber_perform(t_int *w);
-#endif
 /* The object-specific prototypes *********************************************/
 void scrubber_init_memory(t_scrubber *x);
 void scrubber_sample(t_scrubber *x);
