@@ -107,7 +107,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: linux-externals
-        path: externals/pd/**/*.pd_linux
+        path: |
+          externals/pd/**/*.pd
+          externals/pd/**/*.pd_linux
         retention-days: 1
 
   build-package:
