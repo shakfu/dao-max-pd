@@ -141,7 +141,7 @@ jobs:
         merge-multiple: true
 
     - name: Copy scripts to root
-      run: cp source/scripts/remove_macos_quarantine.sh .
+      run: cp source/scripts/remove_macos_externals_quarantine.sh .
 
     - uses: actions/upload-artifact@v4
       with:
@@ -153,5 +153,5 @@ jobs:
             patchers
             LICENSE.md
             README.md
-            remove_macos_quarantine.sh
+            remove_macos_externals_quarantine.sh
 
