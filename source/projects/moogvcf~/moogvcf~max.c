@@ -149,7 +149,7 @@ void moogvcf_free(t_moogvcf *x)
 void moogvcf_dsp64(t_moogvcf* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
 {
     if (samplerate == 0) {
-        pd_error(x, "moogvcf~ • Sampling rate is equal to zero!");
+        error("moogvcf~ • Sampling rate is equal to zero!");
         return;
     }
 
