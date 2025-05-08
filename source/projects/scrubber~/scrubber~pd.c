@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* The global variables *******************************************************/
+/* The global variables
+ * *******************************************************/
 #define MINIMUM_DURATION 000.0
 #define DEFAULT_DURATION 5000.0
 #define MAXIMUM_DURATION 10000.0
@@ -15,13 +16,14 @@
 #define PI 3.1415926535898
 #define TWOPI 6.2831853071796
 
-/* The object structure *******************************************************/
+/* The object structure
+ * *******************************************************/
 typedef struct _scrubber {
     t_object obj;
     t_float x_f;
 
     float fs;
-    
+
     float** amplitudes;
     float** phasediffs;
     float* last_phase_in;
@@ -41,46 +43,61 @@ typedef struct _scrubber {
     short buffer_status;
 } t_scrubber;
 
-/* The arguments/inlets/outlets/vectors indexes *******************************/
+/* The arguments/inlets/outlets/vectors indexes
+ * *******************************/
 enum ARGUMENTS { A_DURATION };
 enum INLETS { I_REAL, I_IMAG, I_SPEED, I_POSITION, NUM_INLETS };
 enum OUTLETS { O_REAL, O_IMAG, NUM_OUTLETS };
-enum DSP { PERFORM, OBJECT,
-           INPUT_REAL, INPUT_IMAG, SPEED, POSITION, OUTPUT_REAL, OUTPUT_IMAG, SYNC,
-           VECTOR_SIZE, NEXT };
+enum DSP {
+    PERFORM,
+    OBJECT,
+    INPUT_REAL,
+    INPUT_IMAG,
+    SPEED,
+    POSITION,
+    OUTPUT_REAL,
+    OUTPUT_IMAG,
+    SYNC,
+    VECTOR_SIZE,
+    NEXT
+};
 
-/* The class pointer **********************************************************/
-static t_class *scrubber_class;
+/* The class pointer
+ * **********************************************************/
+static t_class* scrubber_class;
 
-/* Function prototypes ********************************************************/
-void *scrubber_common_new(t_scrubber *x, short argc, t_atom *argv);
-void scrubber_free(t_scrubber *x);
-void scrubber_dsp(t_scrubber *x, t_signal **sp, short *count);
-t_int *scrubber_perform(t_int *w);
+/* Function prototypes
+ * ********************************************************/
+void* scrubber_common_new(t_scrubber* x, short argc, t_atom* argv);
+void scrubber_free(t_scrubber* x);
+void scrubber_dsp(t_scrubber* x, t_signal** sp, short* count);
+t_int* scrubber_perform(t_int* w);
 
-/* The object-specific prototypes *********************************************/
-void scrubber_init_memory(t_scrubber *x);
-void scrubber_sample(t_scrubber *x);
-void scrubber_overlap(t_scrubber *x, t_symbol *msg, short argc, t_atom *argv);
-void scrubber_resize(t_scrubber *x, t_symbol *msg, short argc, t_atom *argv);
+/* The object-specific prototypes
+ * *********************************************/
+void scrubber_init_memory(t_scrubber* x);
+void scrubber_sample(t_scrubber* x);
+void scrubber_overlap(t_scrubber* x, t_symbol* msg, short argc, t_atom* argv);
+void scrubber_resize(t_scrubber* x, t_symbol* msg, short argc, t_atom* argv);
 
 /******************************************************************************/
 
 
-/* Function prototypes ********************************************************/
-void *scrubber_new(t_symbol *s, short argc, t_atom *argv);
+/* Function prototypes
+ * ********************************************************/
+void* scrubber_new(t_symbol* s, short argc, t_atom* argv);
 
-/* The 'initialization' routine ***********************************************/
+/* The 'initialization' routine
+ * ***********************************************/
 #ifdef WIN32
 __declspec(dllexport) void scrubber_tilde_setup(void);
 #endif
 void scrubber_tilde_setup(void)
 {
     /* Initialize the class */
-    scrubber_class = class_new(gensym("scrubber~"),
-                               (t_newmethod)scrubber_new,
-                               (t_method)scrubber_free,
-                               sizeof(t_scrubber), 0, A_GIMME, 0);
+    scrubber_class = class_new(gensym("scrubber~"), (t_newmethod)scrubber_new,
+                               (t_method)scrubber_free, sizeof(t_scrubber), 0,
+                               A_GIMME, 0);
 
     /* Specify signal input, with automatic float to signal conversion */
     CLASS_MAINSIGNALIN(scrubber_class, t_scrubber, x_f);
@@ -89,25 +106,30 @@ void scrubber_tilde_setup(void)
     class_addmethod(scrubber_class, (t_method)scrubber_dsp, gensym("dsp"), 0);
 
     /* Bind the object-specific methods */
-    class_addmethod(scrubber_class, (t_method)scrubber_sample, gensym("sample"), 0);
-    class_addmethod(scrubber_class, (t_method)scrubber_overlap, gensym("overlap"), A_GIMME, 0);
-    class_addmethod(scrubber_class, (t_method)scrubber_resize, gensym("resize"), A_GIMME, 0);
+    class_addmethod(scrubber_class, (t_method)scrubber_sample,
+                    gensym("sample"), 0);
+    class_addmethod(scrubber_class, (t_method)scrubber_overlap,
+                    gensym("overlap"), A_GIMME, 0);
+    class_addmethod(scrubber_class, (t_method)scrubber_resize,
+                    gensym("resize"), A_GIMME, 0);
 
     /* Print message to Max window */
     post("scrubber~ • External was loaded");
 }
 
-/* The 'new instance' routine *************************************************/
-void *scrubber_new(t_symbol *s, short argc, t_atom *argv)
+/* The 'new instance' routine
+ * *************************************************/
+void* scrubber_new(t_symbol* s, short argc, t_atom* argv)
 {
     /* Instantiate a new object */
-    t_scrubber *x = (t_scrubber *)pd_new(scrubber_class);
+    t_scrubber* x = (t_scrubber*)pd_new(scrubber_class);
 
     return scrubber_common_new(x, argc, argv);
 }
 
-/* The common 'new instance' routine ******************************************/
-void *scrubber_common_new(t_scrubber *x, short argc, t_atom *argv)
+/* The common 'new instance' routine
+ * ******************************************/
+void* scrubber_common_new(t_scrubber* x, short argc, t_atom* argv)
 {
     /* Create inlets */
     inlet_new(&x->obj, &x->obj.ob_pd, gensym("signal"), gensym("signal"));
@@ -133,8 +155,7 @@ void *scrubber_common_new(t_scrubber *x, short argc, t_atom *argv)
         duration_ms = MINIMUM_DURATION;
         post("scrubber~ • Invalid argument: Minimum duration set to %.1f[ms]",
              duration_ms);
-    }
-    else if (duration_ms > MAXIMUM_DURATION) {
+    } else if (duration_ms > MAXIMUM_DURATION) {
         duration_ms = MAXIMUM_DURATION;
         post("scrubber~ • Invalid argument: Maximum duration set to %.1f[ms]",
              duration_ms);
@@ -170,8 +191,9 @@ void *scrubber_common_new(t_scrubber *x, short argc, t_atom *argv)
     return x;
 }
 
-/* The 'free instance' routine ************************************************/
-void scrubber_free(t_scrubber *x)
+/* The 'free instance' routine
+ * ************************************************/
+void scrubber_free(t_scrubber* x)
 {
     /* Free allocated dynamic memory */
     if (x->amplitudes != NULL) {
@@ -189,8 +211,9 @@ void scrubber_free(t_scrubber *x)
     post("scrubber~ • Memory was freed");
 }
 
-/* The object-specific methods ************************************************/
-void scrubber_init_memory(t_scrubber *x)
+/* The object-specific methods
+ * ************************************************/
+void scrubber_init_memory(t_scrubber* x)
 {
     long framecount = x->framecount;
     if (framecount <= 0) {
@@ -211,13 +234,13 @@ void scrubber_init_memory(t_scrubber *x)
     long bytesize;
 
     if (x->amplitudes == NULL) {
-        bytesize = framecount * sizeof(float *);
-        x->amplitudes = (float **)malloc(bytesize);
-        x->phasediffs = (float **)malloc(bytesize);
+        bytesize = framecount * sizeof(float*);
+        x->amplitudes = (float**)malloc(bytesize);
+        x->phasediffs = (float**)malloc(bytesize);
 
         bytesize = framesize * sizeof(float);
-        x->last_phase_in = (float *)malloc(bytesize);
-        x->last_phase_out = (float *)malloc(bytesize);
+        x->last_phase_in = (float*)malloc(bytesize);
+        x->last_phase_out = (float*)malloc(bytesize);
 
     } else {
         for (int ii = 0; ii < x->old_framecount; ii++) {
@@ -225,19 +248,19 @@ void scrubber_init_memory(t_scrubber *x)
             free(x->phasediffs[ii]);
         }
 
-        bytesize = framecount * sizeof(float *);
-        x->amplitudes = (float **)realloc(x->amplitudes, bytesize);
-        x->phasediffs = (float **)realloc(x->phasediffs, bytesize);
+        bytesize = framecount * sizeof(float*);
+        x->amplitudes = (float**)realloc(x->amplitudes, bytesize);
+        x->phasediffs = (float**)realloc(x->phasediffs, bytesize);
 
         bytesize = framesize * sizeof(float);
-        x->last_phase_in = (float *)realloc(x->last_phase_in, bytesize);
-        x->last_phase_out = (float *)realloc(x->last_phase_out, bytesize);
+        x->last_phase_in = (float*)realloc(x->last_phase_in, bytesize);
+        x->last_phase_out = (float*)realloc(x->last_phase_out, bytesize);
     }
 
     bytesize = framesize * sizeof(float);
     for (int ii = 0; ii < framecount; ii++) {
-        x->amplitudes[ii] = (float *)malloc(bytesize);
-        x->phasediffs[ii] = (float *)malloc(bytesize);
+        x->amplitudes[ii] = (float*)malloc(bytesize);
+        x->phasediffs[ii] = (float*)malloc(bytesize);
 
         memset(x->amplitudes[ii], 0, bytesize);
         memset(x->phasediffs[ii], 0, bytesize);
@@ -249,7 +272,7 @@ void scrubber_init_memory(t_scrubber *x)
     x->old_framecount = framecount;
 }
 
-void scrubber_sample(t_scrubber *x)
+void scrubber_sample(t_scrubber* x)
 {
     x->recording_frame = 0;
     x->playback_frame = 0;
@@ -258,7 +281,7 @@ void scrubber_sample(t_scrubber *x)
     x->buffer_status = SCRUBBER_EMPTY;
 }
 
-void scrubber_overlap(t_scrubber *x, t_symbol *msg, short argc, t_atom *argv)
+void scrubber_overlap(t_scrubber* x, t_symbol* msg, short argc, t_atom* argv)
 {
     if (argc >= 1) {
         float new_overlap = atom_getfloatarg(0, argc, argv);
@@ -274,7 +297,7 @@ void scrubber_overlap(t_scrubber *x, t_symbol *msg, short argc, t_atom *argv)
     }
 }
 
-void scrubber_resize(t_scrubber *x, t_symbol *msg, short argc, t_atom *argv)
+void scrubber_resize(t_scrubber* x, t_symbol* msg, short argc, t_atom* argv)
 {
     if (argc >= 1) {
         float new_duration = atom_getfloatarg(0, argc, argv);
@@ -286,17 +309,18 @@ void scrubber_resize(t_scrubber *x, t_symbol *msg, short argc, t_atom *argv)
         if (x->duration_ms != new_duration) {
             x->duration_ms = new_duration;
             x->old_framecount = x->framecount;
-            x->framecount =
-                (x->duration_ms * 0.001 * x->fs) * (x->overlap / (x->fftsize * 2));
+            x->framecount = (x->duration_ms * 0.001 * x->fs)
+                * (x->overlap / (x->fftsize * 2));
 
             scrubber_init_memory(x);
         }
     }
 }
 
-/* The 'DSP' method ***********************************************************/
+/* The 'DSP' method
+ * ***********************************************************/
 
-void scrubber_dsp(t_scrubber *x, t_signal **sp, short *count)
+void scrubber_dsp(t_scrubber* x, t_signal** sp, short* count)
 {
     /* Adjust to changes in the sampling rate */
     float new_fs;
@@ -305,12 +329,11 @@ void scrubber_dsp(t_scrubber *x, t_signal **sp, short *count)
     new_fs = sys_getsr();
     new_fftsize = sp[0]->s_n;
 
-    long new_framecount =
-        (x->duration_ms * 0.001 * new_fs) * (x->overlap / new_fftsize);
+    long new_framecount = (x->duration_ms * 0.001 * new_fs)
+        * (x->overlap / new_fftsize);
 
-    if (x->fs != new_fs ||
-        x->fftsize != new_fftsize ||
-        x->framecount != new_framecount) {
+    if (x->fs != new_fs || x->fftsize != new_fftsize
+        || x->framecount != new_framecount) {
 
         x->fs = new_fs;
         x->fftsize = new_fftsize;
@@ -320,44 +343,39 @@ void scrubber_dsp(t_scrubber *x, t_signal **sp, short *count)
     }
 
     /* Attach the object to the DSP chain */
-    dsp_add(scrubber_perform, NEXT-1, x,
-            sp[0]->s_vec,
-            sp[1]->s_vec,
-            sp[2]->s_vec,
-            sp[3]->s_vec,
-            sp[4]->s_vec,
-            sp[5]->s_vec,
-            sp[6]->s_vec,
-            sp[0]->s_n);
+    dsp_add(scrubber_perform, NEXT - 1, x, sp[0]->s_vec, sp[1]->s_vec,
+            sp[2]->s_vec, sp[3]->s_vec, sp[4]->s_vec, sp[5]->s_vec,
+            sp[6]->s_vec, sp[0]->s_n);
 
     /* Print message to Max window */
     post("scrubber~ • Executing 32-bit perform routine");
 }
 
-/* The 'perform' routine ******************************************************/
-t_int *scrubber_perform(t_int *w)
+/* The 'perform' routine
+ * ******************************************************/
+t_int* scrubber_perform(t_int* w)
 {
     /* Copy the object pointer */
-    t_scrubber *x = (t_scrubber *)w[OBJECT];
+    t_scrubber* x = (t_scrubber*)w[OBJECT];
 
     /* Copy signal pointers */
-    t_float *input_real = (t_float *)w[INPUT_REAL];
-    t_float *input_imag = (t_float *)w[INPUT_IMAG];
-    t_float *speed = (t_float *)w[SPEED];
-    t_float *position = (t_float *)w[POSITION];
-    t_float *output_real = (t_float *)w[OUTPUT_REAL];
-    t_float *output_imag = (t_float *)w[OUTPUT_IMAG];
-    t_float *sync = (t_float *)w[SYNC];
+    t_float* input_real = (t_float*)w[INPUT_REAL];
+    t_float* input_imag = (t_float*)w[INPUT_IMAG];
+    t_float* speed = (t_float*)w[SPEED];
+    t_float* position = (t_float*)w[POSITION];
+    t_float* output_real = (t_float*)w[OUTPUT_REAL];
+    t_float* output_imag = (t_float*)w[OUTPUT_IMAG];
+    t_float* sync = (t_float*)w[SYNC];
 
     /* Copy the signal vector size */
     t_int n = w[VECTOR_SIZE];
 
     /* Load state variables */
-    float **amplitudes = x->amplitudes;
-    float **phasediffs = x->phasediffs;
+    float** amplitudes = x->amplitudes;
+    float** phasediffs = x->phasediffs;
 
-    float *last_phase_in = x->last_phase_in;
-    float *last_phase_out = x->last_phase_out;
+    float* last_phase_in = x->last_phase_in;
+    float* last_phase_out = x->last_phase_out;
 
     long framecount = x->framecount;
 
@@ -385,7 +403,8 @@ t_int *scrubber_perform(t_int *w)
 
         for (int ii = 0; ii < framesize; ii++) {
             local_real = input_real[ii];
-            local_imag = (ii == 0 || ii == framesize-1) ? 0.0 : input_imag[ii];
+            local_imag = (ii == 0 || ii == framesize - 1) ? 0.0
+                                                          : input_imag[ii];
 
             // functionality of cartopol~
             local_magnitude = hypotf(local_real, local_imag);
@@ -421,13 +440,12 @@ t_int *scrubber_perform(t_int *w)
             x->buffer_status = SCRUBBER_FULL;
         }
 
-    // mode: synthesis
+        // mode: synthesis
     } else if (buffer_status == SCRUBBER_FULL) {
         sync_val = playback_frame / (float)framecount;
 
-        if (*position != last_position &&
-            *position >= 0.0 &&
-            *position <= 1.0) {
+        if (*position != last_position && *position >= 0.0
+            && *position <= 1.0) {
 
             last_position = *position;
             playback_frame = last_position * (float)(framecount - 1);
@@ -456,17 +474,18 @@ t_int *scrubber_perform(t_int *w)
 
             // playback real and imaginary part
             output_real[ii] = local_real;
-            output_imag[ii] = (ii == 0 || ii == framesize-1) ? 0.0 : local_imag;
+            output_imag[ii] = (ii == 0 || ii == framesize - 1) ? 0.0
+                                                               : local_imag;
             sync[ii] = sync_val;
         }
 
-            for (int ii = framesize; ii < n; ii++) {
-                output_real[ii] = 0.0;
-                output_imag[ii] = 0.0;
-                sync[ii] = sync_val;
-            }
+        for (int ii = framesize; ii < n; ii++) {
+            output_real[ii] = 0.0;
+            output_imag[ii] = 0.0;
+            sync[ii] = sync_val;
+        }
 
-    // mode: stand by - waiting to start sampling
+        // mode: stand by - waiting to start sampling
     } else {
         for (int ii = 0; ii < n; ii++) {
             output_real[ii] = 0.0;
@@ -479,7 +498,7 @@ t_int *scrubber_perform(t_int *w)
     x->recording_frame = recording_frame;
     x->playback_frame = playback_frame;
     x->last_position = last_position;
-    
+
     /* Return the next address in the DSP chain */
     return w + NEXT;
 }

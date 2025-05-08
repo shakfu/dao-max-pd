@@ -1,6 +1,7 @@
 #include "m_pd.h"
 
-/* The global variables *******************************************************/
+/* The global variables
+ * *******************************************************/
 #define MINIMUM_THRESHOLD 0.0
 #define DEFAULT_THRESHOLD 0.5
 #define MAXIMUM_THRESHOLD 1.0
@@ -9,13 +10,14 @@
 #define DEFAULT_ATTENUATION 0.1
 #define MAXIMUM_ATTENUATION 1.0
 
-/* The object structure *******************************************************/
+/* The object structure
+ * *******************************************************/
 typedef struct _cleaner {
     t_object obj;
     t_float x_f;
 
     float fs;
-    
+
     float threshold_value;
     float attenuation_value;
 
@@ -23,41 +25,51 @@ typedef struct _cleaner {
     short attenuation_connected;
 } t_cleaner;
 
-/* The arguments/inlets/outlets/vectors indexes *******************************/
+/* The arguments/inlets/outlets/vectors indexes
+ * *******************************/
 enum ARGUMENTS { A_THRESHOLD, A_ATTENUATION };
 enum INLETS { I_INPUT, I_THRESHOLD, I_ATTENUATION, NUM_INLETS };
 enum OUTLETS { O_OUTPUT, NUM_OUTLETS };
-enum DSP { PERFORM, OBJECT,
-           INPUT1, THRESHOLD, ATTENUATION, OUTPUT1,
-           VECTOR_SIZE, NEXT };        
+enum DSP {
+    PERFORM,
+    OBJECT,
+    INPUT1,
+    THRESHOLD,
+    ATTENUATION,
+    OUTPUT1,
+    VECTOR_SIZE,
+    NEXT
+};
 
-/* The class pointer **********************************************************/
-static t_class *cleaner_class;
+/* The class pointer
+ * **********************************************************/
+static t_class* cleaner_class;
 
-/* Function prototypes ********************************************************/
-void *cleaner_common_new(t_cleaner *x, short argc, t_atom *argv);
-void cleaner_free(t_cleaner *x);
-void cleaner_dsp(t_cleaner *x, t_signal **sp, short *count);
-t_int *cleaner_perform(t_int *w);
+/* Function prototypes
+ * ********************************************************/
+void* cleaner_common_new(t_cleaner* x, short argc, t_atom* argv);
+void cleaner_free(t_cleaner* x);
+void cleaner_dsp(t_cleaner* x, t_signal** sp, short* count);
+t_int* cleaner_perform(t_int* w);
 
 /******************************************************************************/
 
 
+/* Function prototypes
+ * ********************************************************/
+void* cleaner_new(t_symbol* s, short argc, t_atom* argv);
 
-/* Function prototypes ********************************************************/
-void *cleaner_new(t_symbol *s, short argc, t_atom *argv);
-
-/* The 'initialization' routine ***********************************************/
+/* The 'initialization' routine
+ * ***********************************************/
 #ifdef WIN32
 __declspec(dllexport) void cleaner_tilde_setup(void);
 #endif
 void cleaner_tilde_setup(void)
 {
     /* Initialize the class */
-    cleaner_class = class_new(gensym("cleaner~"),
-                              (t_newmethod)cleaner_new,
-                              (t_method)cleaner_free,
-                              sizeof(t_cleaner), 0, A_GIMME, 0);
+    cleaner_class = class_new(gensym("cleaner~"), (t_newmethod)cleaner_new,
+                              (t_method)cleaner_free, sizeof(t_cleaner), 0,
+                              A_GIMME, 0);
 
     /* Specify signal input, with automatic float to signal conversion */
     CLASS_MAINSIGNALIN(cleaner_class, t_cleaner, x_f);
@@ -69,11 +81,12 @@ void cleaner_tilde_setup(void)
     post("cleaner~ • External was loaded");
 }
 
-/* The 'new instance' routine *************************************************/
-void *cleaner_new(t_symbol *s, short argc, t_atom *argv)
+/* The 'new instance' routine
+ * *************************************************/
+void* cleaner_new(t_symbol* s, short argc, t_atom* argv)
 {
     /* Instantiate a new object */
-    t_cleaner *x = (t_cleaner *)pd_new(cleaner_class);
+    t_cleaner* x = (t_cleaner*)pd_new(cleaner_class);
 
     return cleaner_common_new(x, argc, argv);
 }
@@ -81,8 +94,9 @@ void *cleaner_new(t_symbol *s, short argc, t_atom *argv)
 /******************************************************************************/
 
 
-/* The common 'new instance' routine ******************************************/
-void *cleaner_common_new(t_cleaner *x, short argc, t_atom *argv)
+/* The common 'new instance' routine
+ * ******************************************/
+void* cleaner_common_new(t_cleaner* x, short argc, t_atom* argv)
 {
     /* Create inlets */
     inlet_new(&x->obj, &x->obj.ob_pd, gensym("signal"), gensym("signal"));
@@ -106,19 +120,25 @@ void *cleaner_common_new(t_cleaner *x, short argc, t_atom *argv)
     /* Check validity of passed arguments */
     if (threshold_value < MINIMUM_THRESHOLD) {
         threshold_value = MINIMUM_THRESHOLD;
-        post("cleaner~ • Invalid argument: Minimum threshold value set to %.4f", threshold_value);
-    }
-    else if (threshold_value > MAXIMUM_THRESHOLD) {
+        post(
+            "cleaner~ • Invalid argument: Minimum threshold value set to %.4f",
+            threshold_value);
+    } else if (threshold_value > MAXIMUM_THRESHOLD) {
         threshold_value = MAXIMUM_THRESHOLD;
-        post("cleaner~ • Invalid argument: Maximum threshold value set to %.4f", threshold_value);
+        post(
+            "cleaner~ • Invalid argument: Maximum threshold value set to %.4f",
+            threshold_value);
     }
     if (attenuation_value < MINIMUM_ATTENUATION) {
         attenuation_value = MINIMUM_ATTENUATION;
-        post("cleaner~ • Invalid argument: Minimum attenuation value set to %.4f", attenuation_value);
-    }
-    else if (attenuation_value > MAXIMUM_ATTENUATION) {
+        post("cleaner~ • Invalid argument: Minimum attenuation value set to "
+             "%.4f",
+             attenuation_value);
+    } else if (attenuation_value > MAXIMUM_ATTENUATION) {
         attenuation_value = MAXIMUM_ATTENUATION;
-        post("cleaner~ • Invalid argument: Maximum attenuation value set to %.4f", attenuation_value);
+        post("cleaner~ • Invalid argument: Maximum attenuation value set to "
+             "%.4f",
+             attenuation_value);
     }
 
     /* Initialize some state variables */
@@ -133,8 +153,9 @@ void *cleaner_common_new(t_cleaner *x, short argc, t_atom *argv)
     return x;
 }
 
-/* The 'free instance' routine ************************************************/
-void cleaner_free(t_cleaner *x)
+/* The 'free instance' routine
+ * ************************************************/
+void cleaner_free(t_cleaner* x)
 {
     /* Print message to Max window */
     post("cleaner~ • Memory was freed");
@@ -142,8 +163,9 @@ void cleaner_free(t_cleaner *x)
 
 /******************************************************************************/
 
-/* The 'DSP' method ***********************************************************/
-void cleaner_dsp(t_cleaner *x, t_signal **sp, short *count)
+/* The 'DSP' method
+ * ***********************************************************/
+void cleaner_dsp(t_cleaner* x, t_signal** sp, short* count)
 {
     /* Store signal connection states of inlets */
     x->threshold_connected = 1;
@@ -156,28 +178,25 @@ void cleaner_dsp(t_cleaner *x, t_signal **sp, short *count)
     }
 
     /* Attach the object to the DSP chain */
-    dsp_add(cleaner_perform, NEXT-1, x,
-            sp[0]->s_vec,
-            sp[1]->s_vec,
-            sp[2]->s_vec,
-            sp[3]->s_vec,
-            sp[0]->s_n);
+    dsp_add(cleaner_perform, NEXT - 1, x, sp[0]->s_vec, sp[1]->s_vec,
+            sp[2]->s_vec, sp[3]->s_vec, sp[0]->s_n);
 
     /* Print message to Max window */
     post("cleaner~ • Executing 32-bit perform routine");
 }
 
-/* The 'perform' routine ******************************************************/
-t_int *cleaner_perform(t_int *w)
+/* The 'perform' routine
+ * ******************************************************/
+t_int* cleaner_perform(t_int* w)
 {
     /* Copy the object pointer */
-    t_cleaner *x = (t_cleaner *)w[OBJECT];
+    t_cleaner* x = (t_cleaner*)w[OBJECT];
 
     /* Copy signal pointers */
-    t_float *input = (t_float *)w[INPUT1];
-    t_float *threshold = (t_float *)w[THRESHOLD];
-    t_float *attenuation = (t_float *)w[ATTENUATION];
-    t_float *output = (t_float *)w[OUTPUT1];
+    t_float* input = (t_float*)w[INPUT1];
+    t_float* threshold = (t_float*)w[THRESHOLD];
+    t_float* attenuation = (t_float*)w[ATTENUATION];
+    t_float* output = (t_float*)w[OUTPUT1];
 
     /* Copy the signal vector size */
     t_int n = w[VECTOR_SIZE];
@@ -217,7 +236,7 @@ t_int *cleaner_perform(t_int *w)
 
     /* Update state variables */
     // nothing
-    
+
     /* Return the next address in the DSP chain */
     return w + NEXT;
 }

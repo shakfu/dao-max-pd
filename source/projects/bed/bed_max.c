@@ -1,19 +1,22 @@
-/* Header files required by Max ***********************************************/
+/* Header files required by Max
+ * ***********************************************/
+#include "buffer.h"
 #include "ext.h"
 #include "ext_obex.h"
-#include "buffer.h"
 
-/* The class pointer **********************************************************/
-static t_class *bed_class;
+/* The class pointer
+ * **********************************************************/
+static t_class* bed_class;
 
-/* The object structure *******************************************************/
+/* The object structure
+ * *******************************************************/
 typedef struct _bed {
     t_object obj;
 
-    t_symbol *b_name;
-    t_buffer *buffer;
+    t_symbol* b_name;
+    t_buffer* buffer;
 
-    float *undo_samples;
+    float* undo_samples;
     long undo_start;
     long undo_frames;
     long can_undo;
@@ -21,30 +24,30 @@ typedef struct _bed {
     long undo_cut;
 } t_bed;
 
-/* Function prototypes ********************************************************/
-void *bed_new(t_symbol *s, short argc, t_atom *argv);
-void bed_free(t_bed *x);
+/* Function prototypes
+ * ********************************************************/
+void* bed_new(t_symbol* s, short argc, t_atom* argv);
+void bed_free(t_bed* x);
 
-void bed_info(t_bed *x);
-void bed_dblclick(t_bed *x);
-void bed_bufname(t_bed *x, t_symbol *name);
-void bed_normalize(t_bed *x, t_symbol *msg, short argc, t_atom *argv);
-void bed_fadein(t_bed *x, double fadetime);
-void bed_fadeout(t_bed *x, double fadetime);
-void bed_cut(t_bed *x, double start, double end);
-void bed_paste (t_bed *x, t_symbol *destname);
-void bed_reverse(t_bed *x);
-void bed_ring_modulation(t_bed *x, double frequency);
-void bed_shuffle_n_segments(t_bed *x, long segments);
-void bed_undo(t_bed *x);
+void bed_info(t_bed* x);
+void bed_dblclick(t_bed* x);
+void bed_bufname(t_bed* x, t_symbol* name);
+void bed_normalize(t_bed* x, t_symbol* msg, short argc, t_atom* argv);
+void bed_fadein(t_bed* x, double fadetime);
+void bed_fadeout(t_bed* x, double fadetime);
+void bed_cut(t_bed* x, double start, double end);
+void bed_paste(t_bed* x, t_symbol* destname);
+void bed_reverse(t_bed* x);
+void bed_ring_modulation(t_bed* x, double frequency);
+void bed_shuffle_n_segments(t_bed* x, long segments);
+void bed_undo(t_bed* x);
 
-/* The initialization routine *************************************************/
+/* The initialization routine
+ * *************************************************/
 int C74_EXPORT main()
 {
     /* Initialize the class */
-    bed_class = class_new("bed",
-                          (method)bed_new,
-                          (method)bed_free,
+    bed_class = class_new("bed", (method)bed_new, (method)bed_free,
                           (long)sizeof(t_bed), 0, A_GIMME, 0);
 
     /* Bind the object-specific methods */
@@ -57,8 +60,10 @@ int C74_EXPORT main()
     class_addmethod(bed_class, (method)bed_cut, "cut", A_FLOAT, A_FLOAT, 0);
     class_addmethod(bed_class, (method)bed_paste, "paste", A_SYM, 0);
     class_addmethod(bed_class, (method)bed_reverse, "reverse", 0);
-    class_addmethod(bed_class, (method)bed_ring_modulation, "ring", A_FLOAT, 0);
-    class_addmethod(bed_class, (method)bed_shuffle_n_segments, "shuffle_n", A_LONG, 0);
+    class_addmethod(bed_class, (method)bed_ring_modulation, "ring", A_FLOAT,
+                    0);
+    class_addmethod(bed_class, (method)bed_shuffle_n_segments, "shuffle_n",
+                    A_LONG, 0);
     class_addmethod(bed_class, (method)bed_undo, "undo", 0);
 
     /* Register the class with Max */
@@ -71,11 +76,12 @@ int C74_EXPORT main()
     return 0;
 }
 
-/* The new and free instance routines *****************************************/
-void *bed_new(t_symbol *s, short argc, t_atom *argv)
+/* The new and free instance routines
+ * *****************************************/
+void* bed_new(t_symbol* s, short argc, t_atom* argv)
 {
     /* Instantiate a new object */
-    t_bed *x = (t_bed *)object_alloc(bed_class);
+    t_bed* x = (t_bed*)object_alloc(bed_class);
 
     /* Parse passed argument */
     atom_arg_getsym(&x->b_name, 0, argc, argv);
@@ -90,7 +96,7 @@ void *bed_new(t_symbol *s, short argc, t_atom *argv)
     return x;
 }
 
-void bed_free(t_bed *x)
+void bed_free(t_bed* x)
 {
     /* Free allocated dynamic memory */
     sysmem_freeptr(x->undo_samples);
@@ -99,10 +105,11 @@ void bed_free(t_bed *x)
     post("bed • Object was deleted");
 }
 
-/* The object-specific methods ************************************************/
-int bed_attach_buffer(t_bed *x)
+/* The object-specific methods
+ * ************************************************/
+int bed_attach_buffer(t_bed* x)
 {
-    t_object *o;
+    t_object* o;
     o = x->b_name->s_thing;
 
     if (o == NULL) {
@@ -111,16 +118,16 @@ int bed_attach_buffer(t_bed *x)
     }
 
     if (ob_sym(o) == gensym("buffer~")) {
-        x->buffer = (t_buffer *)o;
+        x->buffer = (t_buffer*)o;
         return 1;
     } else {
         return 0;
     }
 }
 
-int bed_attach_any_buffer(t_buffer **b, t_symbol *b_name)
+int bed_attach_any_buffer(t_buffer** b, t_symbol* b_name)
 {
-    t_object *o;
+    t_object* o;
     o = b_name->s_thing;
 
     if (o == NULL) {
@@ -128,7 +135,7 @@ int bed_attach_any_buffer(t_buffer **b, t_symbol *b_name)
     }
 
     if (ob_sym(o) == gensym("buffer~")) {
-        *b = (t_buffer *)o;
+        *b = (t_buffer*)o;
         if (*b == NULL) {
             post("bed • \"%s\" is not a valid buffer", b_name->s_name);
             return 0;
@@ -141,13 +148,13 @@ int bed_attach_any_buffer(t_buffer **b, t_symbol *b_name)
 }
 
 /******************************************************************************/
-void bed_info(t_bed *x)
+void bed_info(t_bed* x)
 {
     if (!bed_attach_buffer(x)) {
         return;
     }
 
-    t_buffer *b;
+    t_buffer* b;
     b = x->buffer;
 
     post("bed • Information:");
@@ -158,25 +165,22 @@ void bed_info(t_bed *x)
     post("    in-use status: %d", b->b_inuse);
 }
 
-void bed_dblclick(t_bed *x)
+void bed_dblclick(t_bed* x)
 {
     if (!bed_attach_buffer(x)) {
         return;
     }
 
-    t_buffer *b;
+    t_buffer* b;
     b = x->buffer;
 
     object_method(&b->b_obj, gensym("dblclick"));
 }
 
-void bed_bufname(t_bed *x, t_symbol *name)
-{
-    x->b_name = name;
-}
+void bed_bufname(t_bed* x, t_symbol* name) { x->b_name = name; }
 
 /******************************************************************************/
-void bed_normalize(t_bed *x, t_symbol *msg, short argc, t_atom *argv)
+void bed_normalize(t_bed* x, t_symbol* msg, short argc, t_atom* argv)
 {
     if (argc > 1) {
         error("bed • The message must have at most two members");
@@ -192,7 +196,7 @@ void bed_normalize(t_bed *x, t_symbol *msg, short argc, t_atom *argv)
         return;
     }
 
-    t_buffer *b;
+    t_buffer* b;
     b = x->buffer;
 
     ATOMIC_INCREMENT(&b->b_inuse);
@@ -205,9 +209,9 @@ void bed_normalize(t_bed *x, t_symbol *msg, short argc, t_atom *argv)
 
     long chunksize = b->b_frames * b->b_nchans * sizeof(float);
     if (x->undo_samples == NULL) {
-        x->undo_samples = (float *)sysmem_newptr(chunksize);
+        x->undo_samples = (float*)sysmem_newptr(chunksize);
     } else {
-        x->undo_samples = (float *)sysmem_resizeptr(x->undo_samples, chunksize);
+        x->undo_samples = (float*)sysmem_resizeptr(x->undo_samples, chunksize);
     }
 
     if (x->undo_samples == NULL) {
@@ -248,13 +252,13 @@ void bed_normalize(t_bed *x, t_symbol *msg, short argc, t_atom *argv)
     ATOMIC_DECREMENT(&b->b_inuse);
 }
 
-void bed_fadein(t_bed *x, double fadetime)
+void bed_fadein(t_bed* x, double fadetime)
 {
     if (!bed_attach_buffer(x)) {
         return;
     }
 
-    t_buffer *b;
+    t_buffer* b;
     b = x->buffer;
 
     ATOMIC_INCREMENT(&b->b_inuse);
@@ -274,9 +278,9 @@ void bed_fadein(t_bed *x, double fadetime)
 
     long chunksize = fadeframes * b->b_nchans * sizeof(float);
     if (x->undo_samples == NULL) {
-        x->undo_samples = (float *)sysmem_newptr(chunksize);
+        x->undo_samples = (float*)sysmem_newptr(chunksize);
     } else {
-        x->undo_samples = (float *)sysmem_resizeptr(x->undo_samples, chunksize);
+        x->undo_samples = (float*)sysmem_resizeptr(x->undo_samples, chunksize);
     }
 
     if (x->undo_samples == NULL) {
@@ -295,8 +299,8 @@ void bed_fadein(t_bed *x, double fadetime)
 
     for (int ii = 0; ii < fadeframes; ii++) {
         for (int jj = 0; jj < b->b_nchans; jj++) {
-            b->b_samples[(ii * b->b_nchans) + jj] *=
-                (float)ii / (float)fadeframes;
+            b->b_samples[(ii * b->b_nchans) + jj] *= (float)ii
+                / (float)fadeframes;
         }
     }
 
@@ -304,13 +308,13 @@ void bed_fadein(t_bed *x, double fadetime)
     ATOMIC_DECREMENT(&b->b_inuse);
 }
 
-void bed_fadeout(t_bed *x, double fadetime)
+void bed_fadeout(t_bed* x, double fadetime)
 {
     if (!bed_attach_buffer(x)) {
         return;
     }
 
-    t_buffer *b;
+    t_buffer* b;
     b = x->buffer;
 
     ATOMIC_INCREMENT(&b->b_inuse);
@@ -330,9 +334,9 @@ void bed_fadeout(t_bed *x, double fadetime)
 
     long chunksize = fadeframes * b->b_nchans * sizeof(float);
     if (x->undo_samples == NULL) {
-        x->undo_samples = (float *)sysmem_newptr(chunksize);
+        x->undo_samples = (float*)sysmem_newptr(chunksize);
     } else {
-        x->undo_samples = (float *)sysmem_resizeptr(x->undo_samples, chunksize);
+        x->undo_samples = (float*)sysmem_resizeptr(x->undo_samples, chunksize);
     }
 
     if (x->undo_samples == NULL) {
@@ -346,13 +350,14 @@ void bed_fadeout(t_bed *x, double fadetime)
         x->undo_frames = fadeframes;
         x->undo_resize = 0;
         x->undo_cut = 0;
-        sysmem_copyptr(b->b_samples + x->undo_start, x->undo_samples, chunksize);
+        sysmem_copyptr(b->b_samples + x->undo_start, x->undo_samples,
+                       chunksize);
     }
 
     for (int ii = (int)x->undo_start; ii < x->undo_start + fadeframes; ii++) {
         for (int jj = 0; jj < b->b_nchans; jj++) {
-            b->b_samples[(ii * b->b_nchans) + jj] *=
-                1 - (float)(ii - x->undo_start) / (float)fadeframes;
+            b->b_samples[(ii * b->b_nchans) + jj] *= 1
+                - (float)(ii - x->undo_start) / (float)fadeframes;
         }
     }
 
@@ -360,13 +365,13 @@ void bed_fadeout(t_bed *x, double fadetime)
     ATOMIC_DECREMENT(&b->b_inuse);
 }
 
-void bed_cut(t_bed *x, double start, double end)
+void bed_cut(t_bed* x, double start, double end)
 {
     if (!bed_attach_buffer(x)) {
         return;
     }
 
-    t_buffer *b;
+    t_buffer* b;
     b = x->buffer;
 
     ATOMIC_INCREMENT(&b->b_inuse);
@@ -389,9 +394,9 @@ void bed_cut(t_bed *x, double start, double end)
 
     long chunksize = cutframes * b->b_nchans * sizeof(float);
     if (x->undo_samples == NULL) {
-        x->undo_samples = (float *)sysmem_newptr(chunksize);
+        x->undo_samples = (float*)sysmem_newptr(chunksize);
     } else {
-        x->undo_samples = (float *)sysmem_resizeptr(x->undo_samples, chunksize);
+        x->undo_samples = (float*)sysmem_resizeptr(x->undo_samples, chunksize);
     }
 
     if (x->undo_samples == NULL) {
@@ -411,7 +416,7 @@ void bed_cut(t_bed *x, double start, double end)
 
     long bufferframes = b->b_frames;
     long buffersize = bufferframes * b->b_nchans * sizeof(float);
-    float *local_buffer = (float *)sysmem_newptr(buffersize);
+    float* local_buffer = (float*)sysmem_newptr(buffersize);
     if (local_buffer == NULL) {
         error("bed • Cannot allocate memory for undo");
         x->can_undo = 0;
@@ -431,8 +436,7 @@ void bed_cut(t_bed *x, double start, double end)
     sysmem_copyptr(local_buffer, b->b_samples, chunksize);
     chunksize = (bufferframes - endframe) * b->b_nchans * sizeof(float);
     sysmem_copyptr(local_buffer + (endframe * b->b_nchans),
-                   b->b_samples + (startframe * b->b_nchans),
-                   chunksize);
+                   b->b_samples + (startframe * b->b_nchans), chunksize);
 
     sysmem_freeptr(local_buffer);
 
@@ -440,14 +444,14 @@ void bed_cut(t_bed *x, double start, double end)
     ATOMIC_DECREMENT(&b->b_inuse);
 }
 
-void bed_paste (t_bed *x, t_symbol *destname)
+void bed_paste(t_bed* x, t_symbol* destname)
 {
     if (x->can_undo && x->undo_cut) {
         if (!bed_attach_buffer(x)) {
             return;
         }
 
-        t_buffer *destbuf = NULL;
+        t_buffer* destbuf = NULL;
         if (bed_attach_any_buffer(&destbuf, destname)) {
             if (x->buffer->b_nchans != destbuf->b_nchans) {
                 post("bed • Different number of channels of origin (%d) "
@@ -460,7 +464,8 @@ void bed_paste (t_bed *x, t_symbol *destname)
             object_method_long(&destbuf->b_obj, gensym("sizeinsamps"),
                                x->undo_frames, &rv);
             ATOMIC_INCREMENT(&destbuf->b_inuse);
-            long chunksize = x->undo_frames * destbuf->b_nchans * sizeof(float);
+            long chunksize = x->undo_frames * destbuf->b_nchans
+                * sizeof(float);
             sysmem_copyptr(x->undo_samples, destbuf->b_samples, chunksize);
             ATOMIC_DECREMENT(&destbuf->b_inuse);
 
@@ -474,13 +479,13 @@ void bed_paste (t_bed *x, t_symbol *destname)
     }
 }
 
-void bed_reverse(t_bed *x)
+void bed_reverse(t_bed* x)
 {
     if (!bed_attach_buffer(x)) {
         return;
     }
 
-    t_buffer *b;
+    t_buffer* b;
     b = x->buffer;
 
     ATOMIC_INCREMENT(&b->b_inuse);
@@ -493,9 +498,9 @@ void bed_reverse(t_bed *x)
 
     long chunksize = b->b_frames * b->b_nchans * sizeof(float);
     if (x->undo_samples == NULL) {
-        x->undo_samples = (float *)sysmem_newptr(chunksize);
+        x->undo_samples = (float*)sysmem_newptr(chunksize);
     } else {
-        x->undo_samples = (float *)sysmem_resizeptr(x->undo_samples, chunksize);
+        x->undo_samples = (float*)sysmem_resizeptr(x->undo_samples, chunksize);
     }
 
     if (x->undo_samples == NULL) {
@@ -516,9 +521,11 @@ void bed_reverse(t_bed *x)
     for (int ii = 0; ii < ceil(b->b_frames / 2); ii++) {
         for (int jj = 0; jj < b->b_nchans; jj++) {
             temp = b->b_samples[(ii * b->b_nchans) + jj];
-            b->b_samples[(ii * b->b_nchans) + jj] =
-                b->b_samples[(b->b_frames - 1 -  ii * b->b_nchans) + jj];
-            b->b_samples[(b->b_frames - 1 -  ii * b->b_nchans) + jj] = temp;
+            b->b_samples[(ii * b->b_nchans) + jj] = b->b_samples
+                                                        [(b->b_frames - 1
+                                                          - ii * b->b_nchans)
+                                                         + jj];
+            b->b_samples[(b->b_frames - 1 - ii * b->b_nchans) + jj] = temp;
         }
     }
 
@@ -526,13 +533,13 @@ void bed_reverse(t_bed *x)
     ATOMIC_DECREMENT(&b->b_inuse);
 }
 
-void bed_ring_modulation(t_bed *x, double frequency)
+void bed_ring_modulation(t_bed* x, double frequency)
 {
     if (!bed_attach_buffer(x)) {
         return;
     }
 
-    t_buffer *b;
+    t_buffer* b;
     b = x->buffer;
 
     ATOMIC_INCREMENT(&b->b_inuse);
@@ -545,9 +552,9 @@ void bed_ring_modulation(t_bed *x, double frequency)
 
     long chunksize = b->b_frames * b->b_nchans * sizeof(float);
     if (x->undo_samples == NULL) {
-        x->undo_samples = (float *)sysmem_newptr(chunksize);
+        x->undo_samples = (float*)sysmem_newptr(chunksize);
     } else {
-        x->undo_samples = (float *)sysmem_resizeptr(x->undo_samples, chunksize);
+        x->undo_samples = (float*)sysmem_resizeptr(x->undo_samples, chunksize);
     }
 
     if (x->undo_samples == NULL) {
@@ -568,8 +575,8 @@ void bed_ring_modulation(t_bed *x, double frequency)
     float oneoversr = 1.0 / b->b_sr;
     for (int ii = 0; ii < b->b_frames; ii++) {
         for (int jj = 0; jj < b->b_nchans; jj++) {
-            b->b_samples[(ii * b->b_nchans) + jj] *=
-                sin(twopi * frequency * ii * oneoversr);
+            b->b_samples[(ii * b->b_nchans) + jj] *= sin(twopi * frequency * ii
+                                                         * oneoversr);
         }
     }
 
@@ -577,13 +584,13 @@ void bed_ring_modulation(t_bed *x, double frequency)
     ATOMIC_DECREMENT(&b->b_inuse);
 }
 
-void bed_shuffle_n_segments(t_bed *x, long segments)
+void bed_shuffle_n_segments(t_bed* x, long segments)
 {
     if (!bed_attach_buffer(x)) {
         return;
     }
 
-    t_buffer *b;
+    t_buffer* b;
     b = x->buffer;
 
     ATOMIC_INCREMENT(&b->b_inuse);
@@ -596,9 +603,9 @@ void bed_shuffle_n_segments(t_bed *x, long segments)
 
     long chunksize = b->b_frames * b->b_nchans * sizeof(float);
     if (x->undo_samples == NULL) {
-        x->undo_samples = (float *)sysmem_newptr(chunksize);
+        x->undo_samples = (float*)sysmem_newptr(chunksize);
     } else {
-        x->undo_samples = (float *)sysmem_resizeptr(x->undo_samples, chunksize);
+        x->undo_samples = (float*)sysmem_resizeptr(x->undo_samples, chunksize);
     }
 
     if (x->undo_samples == NULL) {
@@ -623,7 +630,7 @@ void bed_shuffle_n_segments(t_bed *x, long segments)
     long end;
     long bufferlength;
     long buffersize;
-    float *local_buffer = NULL;
+    float* local_buffer = NULL;
 
     while (segments > 0) {
         randomsegment = rand() % segments;
@@ -637,22 +644,22 @@ void bed_shuffle_n_segments(t_bed *x, long segments)
         bufferlength = (end - start);
         buffersize = bufferlength * b->b_nchans * sizeof(float);
         if (local_buffer == NULL) {
-            local_buffer = (float *)sysmem_newptr(buffersize);
+            local_buffer = (float*)sysmem_newptr(buffersize);
         } else {
-            local_buffer = (float *)sysmem_resizeptr(local_buffer, buffersize);
+            local_buffer = (float*)sysmem_resizeptr(local_buffer, buffersize);
         }
-        sysmem_copyptr(b->b_samples + (start * b->b_nchans),
-                       local_buffer,
+        sysmem_copyptr(b->b_samples + (start * b->b_nchans), local_buffer,
                        buffersize);
 
         for (long ii = end; ii < totallength; ii++) {
             for (int jj = 0; jj < b->b_nchans; jj++) {
-                b->b_samples[((ii - bufferlength) * b->b_nchans) + jj] =
-                    b->b_samples[(ii * b->b_nchans) + jj];
+                b->b_samples[((ii - bufferlength) * b->b_nchans) + jj]
+                    = b->b_samples[(ii * b->b_nchans) + jj];
             }
         }
         sysmem_copyptr(local_buffer,
-                       b->b_samples + (totallength - bufferlength) * b->b_nchans,
+                       b->b_samples
+                           + (totallength - bufferlength) * b->b_nchans,
                        buffersize);
 
         totallength -= bufferlength;
@@ -667,7 +674,7 @@ void bed_shuffle_n_segments(t_bed *x, long segments)
 
 /******************************************************************************/
 
-void bed_undo(t_bed *x)
+void bed_undo(t_bed* x)
 {
     if (!x->can_undo) {
         post("bed • Nothing to undo");
@@ -678,7 +685,7 @@ void bed_undo(t_bed *x)
         return;
     }
 
-    t_buffer *b;
+    t_buffer* b;
     b = x->buffer;
 
     ATOMIC_INCREMENT(&b->b_inuse);
@@ -692,7 +699,7 @@ void bed_undo(t_bed *x)
     if (x->undo_cut) {
         long bufferframes = b->b_frames;
         long buffersize = bufferframes * b->b_nchans * sizeof(float);
-        float *local_buffer = (float *)sysmem_newptr(buffersize);
+        float* local_buffer = (float*)sysmem_newptr(buffersize);
         if (local_buffer == NULL) {
             error("bed • Cannot allocate memory for undo");
             x->can_undo = 0;
@@ -715,15 +722,17 @@ void bed_undo(t_bed *x)
         sysmem_copyptr(x->undo_samples,
                        b->b_samples + (x->undo_start * b->b_nchans),
                        chunksize);
-        chunksize = (bufferframes - x->undo_start) * b->b_nchans * sizeof(float);
+        chunksize = (bufferframes - x->undo_start) * b->b_nchans
+            * sizeof(float);
         sysmem_copyptr(local_buffer + (x->undo_start * b->b_nchans),
-                       b->b_samples + (x->undo_start + x->undo_frames) * b->b_nchans,
+                       b->b_samples
+                           + (x->undo_start + x->undo_frames) * b->b_nchans,
                        chunksize);
 
         sysmem_freeptr(local_buffer);
 
         x->undo_cut = 0;
-        
+
         object_method(&b->b_obj, gensym("dirty"));
         ATOMIC_DECREMENT(&b->b_inuse);
         return;
@@ -732,7 +741,8 @@ void bed_undo(t_bed *x)
     if (x->undo_resize) {
         ATOMIC_DECREMENT(&b->b_inuse);
         t_atom rv;
-        object_method_long(&b->b_obj, gensym("sizeinsamps"), x->undo_frames, &rv);
+        object_method_long(&b->b_obj, gensym("sizeinsamps"), x->undo_frames,
+                           &rv);
         ATOMIC_INCREMENT(&b->b_inuse);
     }
 

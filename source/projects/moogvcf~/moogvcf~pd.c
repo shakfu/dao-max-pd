@@ -3,7 +3,8 @@
 #include <math.h>
 #include <stdlib.h>
 
-/* The object structure *******************************************************/
+/* The object structure
+ * *******************************************************/
 typedef struct _moogvcf {
     t_object obj;
     t_float x_f;
@@ -19,41 +20,51 @@ typedef struct _moogvcf {
     double y4n;
 } t_moogvcf;
 
-/* The arguments/inlets/outlets/vectors indexes *******************************/
+/* The arguments/inlets/outlets/vectors indexes
+ * *******************************/
 enum ARGUMENTS { NONE };
 enum INLETS { I_INPUT, I_FREQUENCY, I_RESONANCE, NUM_INLETS };
 enum OUTLETS { O_OUTPUT, NUM_OUTLETS };
-enum DSP { PERFORM, OBJECT,
-           INPUT1, FREQUENCY, RESONANCE, OUTPUT1,
-           VECTOR_SIZE, NEXT };
+enum DSP {
+    PERFORM,
+    OBJECT,
+    INPUT1,
+    FREQUENCY,
+    RESONANCE,
+    OUTPUT1,
+    VECTOR_SIZE,
+    NEXT
+};
 
-/* The class pointer **********************************************************/
-static t_class *moogvcf_class;
+/* The class pointer
+ * **********************************************************/
+static t_class* moogvcf_class;
 
-/* Function prototypes ********************************************************/
-void *moogvcf_common_new(t_moogvcf *x, short argc, t_atom *argv);
-void moogvcf_free(t_moogvcf *x);
-void moogvcf_dsp(t_moogvcf *x, t_signal **sp, short *count);
-t_int *moogvcf_perform(t_int *w);
+/* Function prototypes
+ * ********************************************************/
+void* moogvcf_common_new(t_moogvcf* x, short argc, t_atom* argv);
+void moogvcf_free(t_moogvcf* x);
+void moogvcf_dsp(t_moogvcf* x, t_signal** sp, short* count);
+t_int* moogvcf_perform(t_int* w);
 
 /******************************************************************************/
 
 
+/* Function prototypes
+ * ********************************************************/
+void* moogvcf_new(t_symbol* s, short argc, t_atom* argv);
 
-/* Function prototypes ********************************************************/
-void *moogvcf_new(t_symbol *s, short argc, t_atom *argv);
-
-/* The 'initialization' routine ***********************************************/
+/* The 'initialization' routine
+ * ***********************************************/
 #ifdef WIN32
 __declspec(dllexport) void moogvcf_tilde_setup(void);
 #endif
 void moogvcf_tilde_setup(void)
 {
     /* Initialize the class */
-    moogvcf_class = class_new(gensym("moogvcf~"),
-                              (t_newmethod)moogvcf_new,
-                              (t_method)moogvcf_free,
-                              sizeof(t_moogvcf), 0, A_GIMME, 0);
+    moogvcf_class = class_new(gensym("moogvcf~"), (t_newmethod)moogvcf_new,
+                              (t_method)moogvcf_free, sizeof(t_moogvcf), 0,
+                              A_GIMME, 0);
 
     /* Specify signal input, with automatic float to signal conversion */
     CLASS_MAINSIGNALIN(moogvcf_class, t_moogvcf, x_f);
@@ -65,17 +76,19 @@ void moogvcf_tilde_setup(void)
     post("moogvcf~ • External was loaded");
 }
 
-/* The 'new instance' routine *************************************************/
-void *moogvcf_new(t_symbol *s, short argc, t_atom *argv)
+/* The 'new instance' routine
+ * *************************************************/
+void* moogvcf_new(t_symbol* s, short argc, t_atom* argv)
 {
     /* Instantiate a new object */
-    t_moogvcf *x = (t_moogvcf *)pd_new(moogvcf_class);
+    t_moogvcf* x = (t_moogvcf*)pd_new(moogvcf_class);
 
     return moogvcf_common_new(x, argc, argv);
 }
 
-/* The common 'new instance' routine ******************************************/
-void *moogvcf_common_new(t_moogvcf *x, short argc, t_atom *argv)
+/* The common 'new instance' routine
+ * ******************************************/
+void* moogvcf_common_new(t_moogvcf* x, short argc, t_atom* argv)
 {
     /* Create inlets */
     inlet_new(&x->obj, &x->obj.ob_pd, gensym("signal"), gensym("signal"));
@@ -92,8 +105,9 @@ void *moogvcf_common_new(t_moogvcf *x, short argc, t_atom *argv)
     return x;
 }
 
-/* The 'free instance' routine ************************************************/
-void moogvcf_free(t_moogvcf *x)
+/* The 'free instance' routine
+ * ************************************************/
+void moogvcf_free(t_moogvcf* x)
 {
     /* Free allocated dynamic memory */
     // nothing
@@ -102,8 +116,9 @@ void moogvcf_free(t_moogvcf *x)
     post("moogvcf~ • Memory was freed");
 }
 
-/* The 'DSP' method ***********************************************************/
-void moogvcf_dsp(t_moogvcf *x, t_signal **sp, short *count)
+/* The 'DSP' method
+ * ***********************************************************/
+void moogvcf_dsp(t_moogvcf* x, t_signal** sp, short* count)
 {
     if (sp[0]->s_sr == 0) {
         pd_error(x, "moogvcf~ • Sampling rate is equal to zero!");
@@ -122,28 +137,25 @@ void moogvcf_dsp(t_moogvcf *x, t_signal **sp, short *count)
     x->y4n = 0.0;
 
     /* Attach the object to the DSP chain */
-    dsp_add(moogvcf_perform, NEXT-1, x,
-            sp[0]->s_vec,
-            sp[1]->s_vec,
-            sp[2]->s_vec,
-            sp[3]->s_vec,
-            sp[0]->s_n);
+    dsp_add(moogvcf_perform, NEXT - 1, x, sp[0]->s_vec, sp[1]->s_vec,
+            sp[2]->s_vec, sp[3]->s_vec, sp[0]->s_n);
 
     /* Print message to Max window */
     post("moogvcf~ • Executing 32-bit perform routine");
 }
 
-/* The 'perform' routine ******************************************************/
-t_int *moogvcf_perform(t_int *w)
+/* The 'perform' routine
+ * ******************************************************/
+t_int* moogvcf_perform(t_int* w)
 {
     /* Copy the object pointer */
-    t_moogvcf *x = (t_moogvcf *)w[OBJECT];
+    t_moogvcf* x = (t_moogvcf*)w[OBJECT];
 
     /* Copy signal pointers */
-    t_float *input = (t_float *)w[INPUT1];
-    t_float *frequency = (t_float *)w[FREQUENCY];
-    t_float *resonance = (t_float *)w[RESONANCE];
-    t_float *output = (t_float *)w[OUTPUT1];
+    t_float* input = (t_float*)w[INPUT1];
+    t_float* frequency = (t_float*)w[FREQUENCY];
+    t_float* resonance = (t_float*)w[RESONANCE];
+    t_float* output = (t_float*)w[OUTPUT1];
 
     /* Copy the signal vector size */
     t_int n = w[VECTOR_SIZE];
@@ -174,9 +186,8 @@ t_int *moogvcf_perform(t_int *w)
         frequency_normalized = *frequency * freq_factor;
 
         // empirical tunning
-        kp = - 1.0
-             + 3.6 * frequency_normalized
-             - 1.6 * frequency_normalized * frequency_normalized;
+        kp = -1.0 + 3.6 * frequency_normalized
+            - 1.6 * frequency_normalized * frequency_normalized;
 
         // timesaver
         pp1d2 = (kp + 1.0) * 0.5;
@@ -189,7 +200,7 @@ t_int *moogvcf_perform(t_int *w)
         xn = *input++ - (k * y4n);
 
         // four cascade onepole filters (bilinear transform)
-        y1n = (xn  + xnm1 ) * pp1d2 - (kp * y1n);
+        y1n = (xn + xnm1) * pp1d2 - (kp * y1n);
         y2n = (y1n + y1nm1) * pp1d2 - (kp * y2n);
         y3n = (y2n + y2nm1) * pp1d2 - (kp * y3n);
         y4n = (y3n + y3nm1) * pp1d2 - (kp * y4n);
@@ -213,7 +224,7 @@ t_int *moogvcf_perform(t_int *w)
     x->y2n = y2n;
     x->y3n = y3n;
     x->y4n = y4n;
-    
+
     /* Return the next address in the DSP chain */
     return w + NEXT;
 }

@@ -10,7 +10,6 @@
  */
 
 
-
 /**
  * include the interface to Pd
  */
@@ -19,7 +18,7 @@
 /**
  * define a new "class"
  */
-static t_class *helloworld_class;
+static t_class* helloworld_class;
 
 
 /**
@@ -29,7 +28,7 @@ static t_class *helloworld_class;
  * is mandatory and of type "t_object"
  */
 typedef struct _helloworld {
-  t_object  x_obj;
+    t_object x_obj;
 } t_helloworld;
 
 
@@ -38,15 +37,15 @@ typedef struct _helloworld {
  * the name of this function is arbitrary and is registered to Pd in the
  * helloworld_setup() routine
  */
-void helloworld_bang(t_helloworld *x)
+void helloworld_bang(t_helloworld* x)
 {
-  /*
-   * post() is Pd's version of printf()
-   * the string (which can be formatted like with printf()) will be
-   * output to wherever Pd thinks it has too (pd's console, the stderr...)
-   * it automatically adds a newline at the end of the string
-   */
-  post("Hello world !!");
+    /*
+     * post() is Pd's version of printf()
+     * the string (which can be formatted like with printf()) will be
+     * output to wherever Pd thinks it has too (pd's console, the stderr...)
+     * it automatically adds a newline at the end of the string
+     */
+    post("Hello world !!");
 }
 
 
@@ -56,19 +55,19 @@ void helloworld_bang(t_helloworld *x)
  * the name of this function is arbitrary and is registered to Pd in the
  * helloworld_setup() routine
  */
-void *helloworld_new(void)
+void* helloworld_new(void)
 {
-  /*
-   * call the "constructor" of the parent-class
-   * this will reserve enough memory to hold "t_helloworld"
-   */
-  t_helloworld *x = (t_helloworld *)pd_new(helloworld_class);
+    /*
+     * call the "constructor" of the parent-class
+     * this will reserve enough memory to hold "t_helloworld"
+     */
+    t_helloworld* x = (t_helloworld*)pd_new(helloworld_class);
 
-  /*
-   * return the pointer to the class - this is mandatory
-   * if you return "0", then the object-creation will fail
-   */
-  return (void *)x;
+    /*
+     * return the pointer to the class - this is mandatory
+     * if you return "0", then the object-creation will fail
+     */
+    return (void*)x;
 }
 
 
@@ -76,18 +75,21 @@ void *helloworld_new(void)
  * define the function-space of the class
  * within a single-object external the name of this function is special
  */
-void helloworld_setup(void) {
-  /* create a new class */
-  helloworld_class = class_new(gensym("helloworld"),        /* the object's name is "helloworld" */
-                               (t_newmethod)helloworld_new, /* the object's constructor is "helloworld_new()" */
-                               0,                           /* no special destructor */
-                               sizeof(t_helloworld),        /* the size of the data-space */
-                               CLASS_DEFAULT,               /* a normal pd object */
-                               0);                          /* no creation arguments */
+void helloworld_setup(void)
+{
+    /* create a new class */
+    helloworld_class = class_new(
+        gensym("helloworld"),        /* the object's name is "helloworld" */
+        (t_newmethod)helloworld_new, /* the object's constructor is
+                                        "helloworld_new()" */
+        0,                           /* no special destructor */
+        sizeof(t_helloworld),        /* the size of the data-space */
+        CLASS_DEFAULT,               /* a normal pd object */
+        0);                          /* no creation arguments */
 
-  /* attach functions to messages */
-  /* here we bind the "helloworld_bang()" function to the class "helloworld_class" -
-   * it will be called whenever a bang is received
-   */
-  class_addbang(helloworld_class, helloworld_bang);
+    /* attach functions to messages */
+    /* here we bind the "helloworld_bang()" function to the class
+     * "helloworld_class" - it will be called whenever a bang is received
+     */
+    class_addbang(helloworld_class, helloworld_bang);
 }

@@ -1,12 +1,13 @@
 #include "ext.h"
-#include "z_dsp.h"
 #include "ext_obex.h"
+#include "z_dsp.h"
 
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
 
-/* The global variables *******************************************************/
+/* The global variables
+ * *******************************************************/
 #define NUM_POINTS 12
 
 #define INITIAL_FREQ 440.0
@@ -20,7 +21,8 @@
 #define MINIMUM_DUR_DEV 0.0
 #define DEFAULT_DUR_DEV 0.001
 
-/* The object structure *******************************************************/
+/* The object structure
+ * *******************************************************/
 typedef struct _dynstoch {
     t_pxobject obj;
     float a_ampdev;
@@ -29,8 +31,8 @@ typedef struct _dynstoch {
     float a_newfreq;
 
     int num_points;
-    float *amplitudes;
-    float *durations;
+    float* amplitudes;
+    float* durations;
 
     float sr;
     float freq;
@@ -50,61 +52,71 @@ typedef struct _dynstoch {
     short first_time;
 } t_dynstoch;
 
-/* The arguments/inlets/outlets/vectors indexes *******************************/
+/* The arguments/inlets/outlets/vectors indexes
+ * *******************************/
 enum ARGUMENTS { NONE };
 enum INLETS { I_INPUT, NUM_INLETS };
 enum OUTLETS { O_OUTPUT, O_FREQUENCY, NUM_OUTLETS };
-enum DSP { PERFORM, OBJECT,
-           INPUT1, OUTPUT1, FREQUENCY,
-           VECTOR_SIZE, NEXT };
+enum DSP { PERFORM, OBJECT, INPUT1, OUTPUT1, FREQUENCY, VECTOR_SIZE, NEXT };
 
-/* The class pointer **********************************************************/
-static t_class *dynstoch_class;
+/* The class pointer
+ * **********************************************************/
+static t_class* dynstoch_class;
 
-/* Function prototypes ********************************************************/
-void *dynstoch_common_new(t_dynstoch *x, short argc, t_atom *argv);
-void dynstoch_free(t_dynstoch *x);
+/* Function prototypes
+ * ********************************************************/
+void* dynstoch_common_new(t_dynstoch* x, short argc, t_atom* argv);
+void dynstoch_free(t_dynstoch* x);
 
-void dynstoch_dsp64(t_dynstoch* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags);
-void dynstoch_perform64(t_dynstoch* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam);
+void dynstoch_dsp64(t_dynstoch* x, t_object* dsp64, short* count,
+                    double samplerate, long maxvectorsize, long flags);
+void dynstoch_perform64(t_dynstoch* x, t_object* dsp64, double** ins,
+                        long numins, double** outs, long numouts,
+                        long sampleframes, long flags, void* userparam);
 
-/* The object-specific methods ************************************************/
-void dynstoch_ampdev(t_dynstoch *x, float ampdev);
-void dynstoch_durdev(t_dynstoch *x, float durdev);
-void dynstoch_setfreq(t_dynstoch *x, float new_freq);
-void dynstoch_freqrange(t_dynstoch *x, float min_freq, float max_freq);
+/* The object-specific methods
+ * ************************************************/
+void dynstoch_ampdev(t_dynstoch* x, float ampdev);
+void dynstoch_durdev(t_dynstoch* x, float durdev);
+void dynstoch_setfreq(t_dynstoch* x, float new_freq);
+void dynstoch_freqrange(t_dynstoch* x, float min_freq, float max_freq);
 
 float dynstoch_rand(float min, float max);
-void dynstoch_initwave(t_dynstoch *x);
-void dynstoch_recalculate(t_dynstoch *x);
+void dynstoch_initwave(t_dynstoch* x);
+void dynstoch_recalculate(t_dynstoch* x);
 
-/* Function prototypes ********************************************************/
-void *dynstoch_new(t_symbol *s, short argc, t_atom *argv);
+/* Function prototypes
+ * ********************************************************/
+void* dynstoch_new(t_symbol* s, short argc, t_atom* argv);
 
-t_max_err a_ampdev_set(t_dynstoch *x, void *attr, long ac, t_atom *av);
-t_max_err a_durdev_set(t_dynstoch *x, void *attr, long ac, t_atom *av);
-t_max_err a_setfreq_set(t_dynstoch *x, void *attr, long ac, t_atom *av);
-t_max_err a_freqrange_set(t_dynstoch *x, void *attr, long ac, t_atom *av);
-void dynstoch_float(t_dynstoch *x, double farg);
-void dynstoch_assist(t_dynstoch *x, void *b, long msg, long arg, char *dst);
+t_max_err a_ampdev_set(t_dynstoch* x, void* attr, long ac, t_atom* av);
+t_max_err a_durdev_set(t_dynstoch* x, void* attr, long ac, t_atom* av);
+t_max_err a_setfreq_set(t_dynstoch* x, void* attr, long ac, t_atom* av);
+t_max_err a_freqrange_set(t_dynstoch* x, void* attr, long ac, t_atom* av);
+void dynstoch_float(t_dynstoch* x, double farg);
+void dynstoch_assist(t_dynstoch* x, void* b, long msg, long arg, char* dst);
 
-/* The 'initialization' routine ***********************************************/
+/* The 'initialization' routine
+ * ***********************************************/
 int C74_EXPORT main()
 {
     /* Initialize the class */
-    dynstoch_class = class_new("dynstoch~",
-                               (method)dynstoch_new,
-                               (method)dynstoch_free,
-                               sizeof(t_dynstoch), 0, A_GIMME, 0);
+    dynstoch_class = class_new("dynstoch~", (method)dynstoch_new,
+                               (method)dynstoch_free, sizeof(t_dynstoch), 0,
+                               A_GIMME, 0);
 
     /* Bind the DSP method, which is called when the DACs are turned on */
-    class_addmethod(dynstoch_class, (method)dynstoch_dsp64, "dsp64", A_CANT, 0);
+    class_addmethod(dynstoch_class, (method)dynstoch_dsp64, "dsp64", A_CANT,
+                    0);
 
     /* Bind the float method, which is called when floats are sent to inlets */
-    class_addmethod(dynstoch_class, (method)dynstoch_float, "float", A_FLOAT, 0);
+    class_addmethod(dynstoch_class, (method)dynstoch_float, "float", A_FLOAT,
+                    0);
 
-    /* Bind the assist method, which is called on mouse-overs to inlets and outlets */
-    class_addmethod(dynstoch_class, (method)dynstoch_assist, "assist", A_CANT, 0);
+    /* Bind the assist method, which is called on mouse-overs to inlets and
+     * outlets */
+    class_addmethod(dynstoch_class, (method)dynstoch_assist, "assist", A_CANT,
+                    0);
 
     /* Bind the object-specific methods */
     // handled using attributes
@@ -128,7 +140,8 @@ int C74_EXPORT main()
     CLASS_ATTR_ORDER(dynstoch_class, "setfreq", 0, "3");
     CLASS_ATTR_ACCESSORS(dynstoch_class, "setfreq", NULL, a_setfreq_set);
 
-    CLASS_ATTR_FLOAT_ARRAY(dynstoch_class, "freqrange", 0, t_dynstoch, a_freqrange, 2);
+    CLASS_ATTR_FLOAT_ARRAY(dynstoch_class, "freqrange", 0, t_dynstoch,
+                           a_freqrange, 2);
     CLASS_ATTR_LABEL(dynstoch_class, "freqrange", 0, "Frequency range");
     CLASS_ATTR_ORDER(dynstoch_class, "freqrange", 0, "4");
     CLASS_ATTR_ACCESSORS(dynstoch_class, "freqrange", NULL, a_freqrange_set);
@@ -143,11 +156,12 @@ int C74_EXPORT main()
     return 0;
 }
 
-/* The 'new instance' routine *************************************************/
-void *dynstoch_new(t_symbol *s, short argc, t_atom *argv)
+/* The 'new instance' routine
+ * *************************************************/
+void* dynstoch_new(t_symbol* s, short argc, t_atom* argv)
 {
     /* Instantiate a new object */
-    t_dynstoch *x = (t_dynstoch *)object_alloc(dynstoch_class);
+    t_dynstoch* x = (t_dynstoch*)object_alloc(dynstoch_class);
 
     return dynstoch_common_new(x, argc, argv);
 }
@@ -155,12 +169,9 @@ void *dynstoch_new(t_symbol *s, short argc, t_atom *argv)
 /******************************************************************************/
 
 
-
-
-
-
-/* The 'setter' and 'getter' methods for attributes ***************************/
-t_max_err a_ampdev_set(t_dynstoch *x, void *attr, long ac, t_atom *av)
+/* The 'setter' and 'getter' methods for attributes
+ * ***************************/
+t_max_err a_ampdev_set(t_dynstoch* x, void* attr, long ac, t_atom* av)
 {
     if (ac && av) {
         x->a_ampdev = atom_getfloat(av);
@@ -170,7 +181,7 @@ t_max_err a_ampdev_set(t_dynstoch *x, void *attr, long ac, t_atom *av)
     return MAX_ERR_NONE;
 }
 
-t_max_err a_durdev_set(t_dynstoch *x, void *attr, long ac, t_atom *av)
+t_max_err a_durdev_set(t_dynstoch* x, void* attr, long ac, t_atom* av)
 {
     if (ac && av) {
         x->a_durdev = atom_getfloat(av);
@@ -180,7 +191,7 @@ t_max_err a_durdev_set(t_dynstoch *x, void *attr, long ac, t_atom *av)
     return MAX_ERR_NONE;
 }
 
-t_max_err a_setfreq_set(t_dynstoch *x, void *attr, long ac, t_atom *av)
+t_max_err a_setfreq_set(t_dynstoch* x, void* attr, long ac, t_atom* av)
 {
     if (ac && av) {
         x->a_newfreq = atom_getfloat(av);
@@ -190,7 +201,7 @@ t_max_err a_setfreq_set(t_dynstoch *x, void *attr, long ac, t_atom *av)
     return MAX_ERR_NONE;
 }
 
-t_max_err a_freqrange_set(t_dynstoch *x, void *attr, long ac, t_atom *av)
+t_max_err a_freqrange_set(t_dynstoch* x, void* attr, long ac, t_atom* av)
 {
     if (ac && av) {
         atom_getfloat_array(ac, av, 2, x->a_freqrange);
@@ -200,52 +211,61 @@ t_max_err a_freqrange_set(t_dynstoch *x, void *attr, long ac, t_atom *av)
     return MAX_ERR_NONE;
 }
 
-/* The 'float' method *********************************************************/
-void dynstoch_float(t_dynstoch *x, double farg)
+/* The 'float' method
+ * *********************************************************/
+void dynstoch_float(t_dynstoch* x, double farg)
 {
     // nothing
 }
 
-/* The 'assist' method ********************************************************/
-void dynstoch_assist(t_dynstoch *x, void *b, long msg, long arg, char *dst)
+/* The 'assist' method
+ * ********************************************************/
+void dynstoch_assist(t_dynstoch* x, void* b, long msg, long arg, char* dst)
 {
     /* Document inlet functions */
     if (msg == ASSIST_INLET) {
         switch (arg) {
-            case I_INPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(messages) Object's messages"); break;
+        case I_INPUT:
+            snprintf_zero(dst, ASSIST_MAX_STRING_LEN,
+                          "(messages) Object's messages");
+            break;
         }
     }
 
     /* Document outlet functions */
     else if (msg == ASSIST_OUTLET) {
         switch (arg) {
-            case O_OUTPUT: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Output"); break;
-            case O_FREQUENCY: snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Frequency"); break;
+        case O_OUTPUT:
+            snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Output");
+            break;
+        case O_FREQUENCY:
+            snprintf_zero(dst, ASSIST_MAX_STRING_LEN, "(signal) Frequency");
+            break;
         }
     }
 }
 
 
-/* The common 'new instance' routine ******************************************/
-void *dynstoch_common_new(t_dynstoch *x, short argc, t_atom *argv)
+/* The common 'new instance' routine
+ * ******************************************/
+void* dynstoch_common_new(t_dynstoch* x, short argc, t_atom* argv)
 {
     /* Create inlets */
-    dsp_setup((t_pxobject *)x, NUM_INLETS);
+    dsp_setup((t_pxobject*)x, NUM_INLETS);
 
     /* Create signal outlets */
-    outlet_new((t_object *)x, "signal");
-    outlet_new((t_object *)x, "signal");
+    outlet_new((t_object*)x, "signal");
+    outlet_new((t_object*)x, "signal");
 
     /* Avoid sharing memory among audio vectors */
     x->obj.z_misc |= Z_NO_INPLACE;
 
     /* Initialize state variables */
     x->num_points = NUM_POINTS;
-    x->amplitudes = (float *)malloc((x->num_points + 1) * sizeof(float));
-    x->durations = (float *)malloc(x->num_points * sizeof(float));
+    x->amplitudes = (float*)malloc((x->num_points + 1) * sizeof(float));
+    x->durations = (float*)malloc(x->num_points * sizeof(float));
 
-    if (x->amplitudes == NULL ||
-        x->durations == NULL) {
+    if (x->amplitudes == NULL || x->durations == NULL) {
         error("dynstoch~ • Cannot allocate memory for this object");
         return NULL;
     }
@@ -274,11 +294,12 @@ void *dynstoch_common_new(t_dynstoch *x, short argc, t_atom *argv)
     return x;
 }
 
-/* The 'free instance' routine ************************************************/
-void dynstoch_free(t_dynstoch *x)
+/* The 'free instance' routine
+ * ************************************************/
+void dynstoch_free(t_dynstoch* x)
 {
     /* Remove the object from the DSP chain */
-    dsp_free((t_pxobject *)x);
+    dsp_free((t_pxobject*)x);
 
     /* Free allocated dynamic memory */
     free(x->amplitudes);
@@ -288,30 +309,34 @@ void dynstoch_free(t_dynstoch *x)
     post("dynstoch~ • Memory was freed");
 }
 
-/* The object-specific methods ************************************************/
-void dynstoch_ampdev(t_dynstoch *x, float ampdev)
+/* The object-specific methods
+ * ************************************************/
+void dynstoch_ampdev(t_dynstoch* x, float ampdev)
 {
     if (ampdev < MINIMUM_AMP_DEV) {
         ampdev = MINIMUM_AMP_DEV;
-        error("dynstoch~ • Invalid attribute: Amplitude deviation set to %.4f", MINIMUM_AMP_DEV);
+        error("dynstoch~ • Invalid attribute: Amplitude deviation set to %.4f",
+              MINIMUM_AMP_DEV);
     }
     if (ampdev > MAXIMUM_AMP_DEV) {
         ampdev = MAXIMUM_AMP_DEV;
-        error("dynstoch~ • Invalid attribute: Amplitude deviation set to %.4f", MAXIMUM_AMP_DEV);
+        error("dynstoch~ • Invalid attribute: Amplitude deviation set to %.4f",
+              MAXIMUM_AMP_DEV);
     }
     x->amplitude_deviation = ampdev;
 }
 
-void dynstoch_durdev(t_dynstoch *x, float durdev)
+void dynstoch_durdev(t_dynstoch* x, float durdev)
 {
     if (durdev < MINIMUM_DUR_DEV) {
         durdev = MINIMUM_DUR_DEV;
-        error("dynstoch~ • Invalid attribute: Duration deviation set to %.4f", MINIMUM_DUR_DEV);
+        error("dynstoch~ • Invalid attribute: Duration deviation set to %.4f",
+              MINIMUM_DUR_DEV);
     }
     x->duration_deviation = durdev;
 }
 
-void dynstoch_setfreq(t_dynstoch *x, float new_freq)
+void dynstoch_setfreq(t_dynstoch* x, float new_freq)
 {
     if (new_freq < x->min_freq || x->max_freq < new_freq) {
         post("dynstoch~ • Frequency requested out of range: %f", new_freq);
@@ -339,7 +364,7 @@ void dynstoch_setfreq(t_dynstoch *x, float new_freq)
     x->freq = x->sr / x->total_length;
 }
 
-void dynstoch_freqrange(t_dynstoch *x, float min_freq, float max_freq)
+void dynstoch_freqrange(t_dynstoch* x, float min_freq, float max_freq)
 {
     if (min_freq <= 0 || max_freq <= 0) {
         return;
@@ -357,7 +382,7 @@ float dynstoch_rand(float min, float max)
     return (rand() % 32768) / 32767.0 * (max - min) + min;
 }
 
-void dynstoch_initwave(t_dynstoch *x)
+void dynstoch_initwave(t_dynstoch* x)
 {
     x->total_length = x->sr / x->freq;
 
@@ -371,17 +396,17 @@ void dynstoch_initwave(t_dynstoch *x)
     x->remaining_samples = x->durations[0];
 }
 
-void dynstoch_recalculate(t_dynstoch *x)
+void dynstoch_recalculate(t_dynstoch* x)
 {
     float amplitude_adjustment;
     float duration_adjustment;
 
     x->total_length = 0;
     for (int ii = 0; ii < x->num_points; ii++) {
-        amplitude_adjustment =
-            dynstoch_rand(-x->amplitude_deviation, x->amplitude_deviation);
-        duration_adjustment =
-            dynstoch_rand(-x->duration_deviation, x->duration_deviation);
+        amplitude_adjustment = dynstoch_rand(-x->amplitude_deviation,
+                                             x->amplitude_deviation);
+        duration_adjustment = dynstoch_rand(-x->duration_deviation,
+                                            x->duration_deviation);
 
         /* Adjust amplitudes and durations */
         x->amplitudes[ii] += amplitude_adjustment;
@@ -408,10 +433,10 @@ void dynstoch_recalculate(t_dynstoch *x)
 
     /* Force waveform period within frequency boundaries */
     int difference;
-    if (x->total_length > x->max_duration){
+    if (x->total_length > x->max_duration) {
         difference = x->total_length - x->max_duration;
         x->total_length = x->max_duration;
-        for (int ii = 0; ii < difference; ii++){
+        for (int ii = 0; ii < difference; ii++) {
             if (x->durations[ii % x->num_points] > 1) {
                 x->durations[ii % x->num_points] -= 1;
             }
@@ -419,7 +444,7 @@ void dynstoch_recalculate(t_dynstoch *x)
     } else if (x->total_length < x->min_duration) {
         difference = x->min_duration - x->total_length;
         x->total_length = x->min_duration;
-        for (int ii = 0; ii < difference; ii++){
+        for (int ii = 0; ii < difference; ii++) {
             x->durations[ii % x->num_points] += 1;
         }
     }
@@ -442,7 +467,8 @@ void dynstoch_recalculate(t_dynstoch *x)
 
 /******************************************************************************/
 
-void dynstoch_dsp64(t_dynstoch* x, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
+void dynstoch_dsp64(t_dynstoch* x, t_object* dsp64, short* count,
+                    double samplerate, long maxvectorsize, long flags)
 {
     if (samplerate == 0) {
         error("dynstoch~ • Sampling rate is equal to zero!");
@@ -460,10 +486,11 @@ void dynstoch_dsp64(t_dynstoch* x, t_object* dsp64, short* count, double sampler
     }
 
     object_method(dsp64, gensym("dsp_add64"), x, dynstoch_perform64, 0, NULL);
-
 }
 
-void dynstoch_perform64(t_dynstoch* x, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
+void dynstoch_perform64(t_dynstoch* x, t_object* dsp64, double** ins,
+                        long numins, double** outs, long numouts,
+                        long sampleframes, long flags, void* userparam)
 {
     t_double* input = ins[0];
     t_double* output = outs[0];
@@ -472,8 +499,8 @@ void dynstoch_perform64(t_dynstoch* x, t_object* dsp64, double** ins, long numin
 
     /* Load state variables */
     int num_points = x->num_points;
-    float *amplitudes = x->amplitudes;
-    float *durations = x->durations;
+    float* amplitudes = x->amplitudes;
+    float* durations = x->durations;
 
     int current_segment = x->current_segment;
     float remaining_samples = x->remaining_samples;

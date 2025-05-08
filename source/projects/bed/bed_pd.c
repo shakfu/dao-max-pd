@@ -1,25 +1,28 @@
-/* Header files required by Pd ************************************************/
+/* Header files required by Pd
+ * ************************************************/
 #include "m_pd.h"
+#include "stdlib.h"
 #include <math.h>
 #include <string.h>
-#include "stdlib.h"
 
-/* The class pointer **********************************************************/
-static t_class *bed_class;
+/* The class pointer
+ * **********************************************************/
+static t_class* bed_class;
 
-/* The object structure *******************************************************/
+/* The object structure
+ * *******************************************************/
 typedef struct _bed {
     t_object obj;
 
-    t_symbol *b_name;
-    t_garray *buffer;
+    t_symbol* b_name;
+    t_garray* buffer;
 
     long b_valid;
     long b_frames;
-    float *b_samples;
+    float* b_samples;
     float b_sr;
 
-    float *undo_samples;
+    float* undo_samples;
     long undo_start;
     long undo_frames;
     long can_undo;
@@ -27,56 +30,65 @@ typedef struct _bed {
     long undo_cut;
 } t_bed;
 
-/* Function prototypes ********************************************************/
-void *bed_new(t_symbol *s);
-void bed_free(t_bed *x);
+/* Function prototypes
+ * ********************************************************/
+void* bed_new(t_symbol* s);
+void bed_free(t_bed* x);
 
-void bed_info(t_bed *x);
-void bed_bufname(t_bed *x, t_symbol *name);
-void bed_normalize(t_bed *x, t_symbol *msg, short argc, t_atom *argv);
-void bed_fadein(t_bed *x, t_floatarg fadetime);
-void bed_fadeout(t_bed *x, t_floatarg fadetime);
-void bed_cut(t_bed *x, t_floatarg start, t_floatarg end);
-void bed_paste (t_bed *x, t_symbol *destname);
-void bed_reverse(t_bed *x);
-void bed_ring_modulation(t_bed *x, t_floatarg frequency);
-void bed_shuffle_n_segments(t_bed *x, t_floatarg segments);
-void bed_undo(t_bed *x);
+void bed_info(t_bed* x);
+void bed_bufname(t_bed* x, t_symbol* name);
+void bed_normalize(t_bed* x, t_symbol* msg, short argc, t_atom* argv);
+void bed_fadein(t_bed* x, t_floatarg fadetime);
+void bed_fadeout(t_bed* x, t_floatarg fadetime);
+void bed_cut(t_bed* x, t_floatarg start, t_floatarg end);
+void bed_paste(t_bed* x, t_symbol* destname);
+void bed_reverse(t_bed* x);
+void bed_ring_modulation(t_bed* x, t_floatarg frequency);
+void bed_shuffle_n_segments(t_bed* x, t_floatarg segments);
+void bed_undo(t_bed* x);
 
-/* The initialization routine *************************************************/
+/* The initialization routine
+ * *************************************************/
 #ifdef WIN32
 __declspec(dllexport) void bed_setup(void);
 #endif
 void bed_setup(void)
 {
     /* Initialize the class */
-    bed_class = class_new(gensym("bed"),
-                          (t_newmethod)bed_new,
-                          (t_method)bed_free,
-                          sizeof(t_bed), 0, A_SYMBOL, 0);
+    bed_class = class_new(gensym("bed"), (t_newmethod)bed_new,
+                          (t_method)bed_free, sizeof(t_bed), 0, A_SYMBOL, 0);
 
     /* Bind the object-specific methods */
     class_addmethod(bed_class, (t_method)bed_info, gensym("info"), 0);
-    class_addmethod(bed_class, (t_method)bed_bufname, gensym("name"), A_SYMBOL, 0);
-    class_addmethod(bed_class, (t_method)bed_normalize, gensym("normalize"), A_GIMME, 0);
-    class_addmethod(bed_class, (t_method)bed_fadein, gensym("fadein"), A_FLOAT, 0);
-    class_addmethod(bed_class, (t_method)bed_fadeout, gensym("fadeout"), A_FLOAT, 0);
-    class_addmethod(bed_class, (t_method)bed_cut, gensym("cut"), A_FLOAT, A_FLOAT, 0);
-    class_addmethod(bed_class, (t_method)bed_paste, gensym("paste"), A_SYMBOL, 0);
+    class_addmethod(bed_class, (t_method)bed_bufname, gensym("name"), A_SYMBOL,
+                    0);
+    class_addmethod(bed_class, (t_method)bed_normalize, gensym("normalize"),
+                    A_GIMME, 0);
+    class_addmethod(bed_class, (t_method)bed_fadein, gensym("fadein"), A_FLOAT,
+                    0);
+    class_addmethod(bed_class, (t_method)bed_fadeout, gensym("fadeout"),
+                    A_FLOAT, 0);
+    class_addmethod(bed_class, (t_method)bed_cut, gensym("cut"), A_FLOAT,
+                    A_FLOAT, 0);
+    class_addmethod(bed_class, (t_method)bed_paste, gensym("paste"), A_SYMBOL,
+                    0);
     class_addmethod(bed_class, (t_method)bed_reverse, gensym("reverse"), 0);
-    class_addmethod(bed_class, (t_method)bed_ring_modulation, gensym("ring"), A_FLOAT, 0);
-    class_addmethod(bed_class, (t_method)bed_shuffle_n_segments, gensym("shuffle_n"), A_FLOAT, 0);
+    class_addmethod(bed_class, (t_method)bed_ring_modulation, gensym("ring"),
+                    A_FLOAT, 0);
+    class_addmethod(bed_class, (t_method)bed_shuffle_n_segments,
+                    gensym("shuffle_n"), A_FLOAT, 0);
     class_addmethod(bed_class, (t_method)bed_undo, gensym("undo"), 0);
 
     /* Print message to Max window */
     post("bed • External was loaded");
 }
 
-/* The new and free instance routines *****************************************/
-void *bed_new(t_symbol *s)
+/* The new and free instance routines
+ * *****************************************/
+void* bed_new(t_symbol* s)
 {
     /* Instantiate a new object */
-    t_bed *x = (t_bed *)pd_new(bed_class);
+    t_bed* x = (t_bed*)pd_new(bed_class);
 
     /* Parse passed argument */
     x->b_name = s;
@@ -91,7 +103,7 @@ void *bed_new(t_symbol *s)
     return x;
 }
 
-void bed_free(t_bed *x)
+void bed_free(t_bed* x)
 {
     /* Free allocated dynamic memory */
     freebytes(x->undo_samples, x->undo_frames);
@@ -100,17 +112,18 @@ void bed_free(t_bed *x)
     post("bed • Object was deleted");
 }
 
-/* The object-specific methods ************************************************/
-int bed_attach_buffer(t_bed *x)
+/* The object-specific methods
+ * ************************************************/
+int bed_attach_buffer(t_bed* x)
 {
-    t_symbol *b_name;
-    float *b_samples;
+    t_symbol* b_name;
+    float* b_samples;
     int b_frames;
 
     b_name = x->b_name;
     x->b_valid = 0;
 
-    if (!(x->buffer = (t_garray *)pd_findbyclass(b_name, garray_class))) {
+    if (!(x->buffer = (t_garray*)pd_findbyclass(b_name, garray_class))) {
         if (b_name->s_name) {
             post("bed • \"%s\" is not a valid buffer", x->b_name->s_name);
         }
@@ -133,9 +146,9 @@ int bed_attach_buffer(t_bed *x)
     return (int)x->b_valid;
 }
 
-int bed_attach_any_buffer(t_garray **destbuf, t_symbol *b_name)
+int bed_attach_any_buffer(t_garray** destbuf, t_symbol* b_name)
 {
-    if (!(*destbuf = (t_garray *)pd_findbyclass(b_name, garray_class))) {
+    if (!(*destbuf = (t_garray*)pd_findbyclass(b_name, garray_class))) {
         if (b_name->s_name) {
             post("bed • \"%s\" is not a valid buffer", b_name->s_name);
         }
@@ -145,7 +158,7 @@ int bed_attach_any_buffer(t_garray **destbuf, t_symbol *b_name)
 }
 
 /******************************************************************************/
-void bed_info(t_bed *x)
+void bed_info(t_bed* x)
 {
     if (!bed_attach_buffer(x)) {
         return;
@@ -157,13 +170,10 @@ void bed_info(t_bed *x)
     post("    validity: %d", x->b_valid);
 }
 
-void bed_bufname(t_bed *x, t_symbol *name)
-{
-    x->b_name = name;
-}
+void bed_bufname(t_bed* x, t_symbol* name) { x->b_name = name; }
 
 /******************************************************************************/
-void bed_normalize(t_bed *x, t_symbol *msg, short argc, t_atom *argv)
+void bed_normalize(t_bed* x, t_symbol* msg, short argc, t_atom* argv)
 {
     if (argc > 1) {
         pd_error(x, "bed • The message must have at most two members");
@@ -227,7 +237,7 @@ void bed_normalize(t_bed *x, t_symbol *msg, short argc, t_atom *argv)
     garray_redraw(x->buffer);
 }
 
-void bed_fadein(t_bed *x, t_floatarg fadetime)
+void bed_fadein(t_bed* x, t_floatarg fadetime)
 {
     if (!bed_attach_buffer(x)) {
         return;
@@ -272,7 +282,7 @@ void bed_fadein(t_bed *x, t_floatarg fadetime)
     garray_redraw(x->buffer);
 }
 
-void bed_fadeout(t_bed *x, t_floatarg fadetime)
+void bed_fadeout(t_bed* x, t_floatarg fadetime)
 {
     if (!bed_attach_buffer(x)) {
         return;
@@ -311,13 +321,14 @@ void bed_fadeout(t_bed *x, t_floatarg fadetime)
     }
 
     for (int ii = (int)x->undo_start; ii < x->undo_start + fadeframes; ii++) {
-        x->b_samples[ii] *= 1 - (float)(ii - x->undo_start) / (float)fadeframes;
+        x->b_samples[ii] *= 1
+            - (float)(ii - x->undo_start) / (float)fadeframes;
     }
 
     garray_redraw(x->buffer);
 }
 
-void bed_cut(t_bed *x, t_floatarg start, t_floatarg end)
+void bed_cut(t_bed* x, t_floatarg start, t_floatarg end)
 {
     if (!bed_attach_buffer(x)) {
         return;
@@ -360,7 +371,7 @@ void bed_cut(t_bed *x, t_floatarg start, t_floatarg end)
 
     long bufferframes = x->b_frames;
     long buffersize = bufferframes * sizeof(float);
-    float *local_buffer = getbytes(buffersize);
+    float* local_buffer = getbytes(buffersize);
     if (local_buffer == NULL) {
         pd_error(x, "bed • Cannot allocate memory for undo");
         x->can_undo = 0;
@@ -381,27 +392,27 @@ void bed_cut(t_bed *x, t_floatarg start, t_floatarg end)
     garray_redraw(x->buffer);
 }
 
-void bed_paste (t_bed *x, t_symbol *destname)
+void bed_paste(t_bed* x, t_symbol* destname)
 {
     if (x->can_undo && x->undo_cut) {
         if (!bed_attach_buffer(x)) {
             return;
         }
 
-        t_garray *destbuf = NULL;
+        t_garray* destbuf = NULL;
         int destbuf_b_frames;
-        float *destbuf_b_samples;
+        float* destbuf_b_samples;
         if (bed_attach_any_buffer(&destbuf, destname)) {
-            if (!garray_getfloatarray(destbuf, &destbuf_b_frames, &destbuf_b_samples)) {
+            if (!garray_getfloatarray(destbuf, &destbuf_b_frames,
+                                      &destbuf_b_samples)) {
                 post("bed • \"%s\" is not a valid buffer", destname->s_name);
                 return;
-
             }
             garray_resize(destbuf, x->undo_frames);
-            if (!garray_getfloatarray(destbuf, &destbuf_b_frames, &destbuf_b_samples)) {
+            if (!garray_getfloatarray(destbuf, &destbuf_b_frames,
+                                      &destbuf_b_samples)) {
                 post("bed • \"%s\" is not a valid buffer", destname->s_name);
                 return;
-
             }
 
             long chunksize = x->undo_frames * sizeof(float);
@@ -419,7 +430,7 @@ void bed_paste (t_bed *x, t_symbol *destname)
     }
 }
 
-void bed_reverse(t_bed *x)
+void bed_reverse(t_bed* x)
 {
     if (!bed_attach_buffer(x)) {
         return;
@@ -454,14 +465,14 @@ void bed_reverse(t_bed *x)
     float temp;
     for (int ii = 0; ii < ceil(x->b_frames / 2); ii++) {
         temp = x->b_samples[ii];
-        x->b_samples[ii] = x->b_samples[x->b_frames - 1 -  ii];
-        x->b_samples[x->b_frames - 1 -  ii] = temp;
+        x->b_samples[ii] = x->b_samples[x->b_frames - 1 - ii];
+        x->b_samples[x->b_frames - 1 - ii] = temp;
     }
 
     garray_redraw(x->buffer);
 }
 
-void bed_ring_modulation(t_bed *x, t_floatarg frequency)
+void bed_ring_modulation(t_bed* x, t_floatarg frequency)
 {
     if (!bed_attach_buffer(x)) {
         return;
@@ -502,7 +513,7 @@ void bed_ring_modulation(t_bed *x, t_floatarg frequency)
     garray_redraw(x->buffer);
 }
 
-void bed_shuffle_n_segments(t_bed *x, t_floatarg segments)
+void bed_shuffle_n_segments(t_bed* x, t_floatarg segments)
 {
     if (!bed_attach_buffer(x)) {
         return;
@@ -542,7 +553,7 @@ void bed_shuffle_n_segments(t_bed *x, t_floatarg segments)
     long end;
     long bufferlength;
     long buffersize = 0;
-    float *local_buffer = NULL;
+    float* local_buffer = NULL;
 
     while (segments > 0) {
         randomsegment = rand() % (long)segments;
@@ -561,15 +572,12 @@ void bed_shuffle_n_segments(t_bed *x, t_floatarg segments)
             long oldsize = x->undo_frames * sizeof(float);
             local_buffer = resizebytes(local_buffer, oldsize, chunksize);
         }
-        memcpy(local_buffer,
-               x->b_samples + start,
-               buffersize);
+        memcpy(local_buffer, x->b_samples + start, buffersize);
 
         for (long ii = end; ii < totallength; ii++) {
             x->b_samples[ii - bufferlength] = x->b_samples[ii];
         }
-        memcpy(x->b_samples + (totallength - bufferlength),
-               local_buffer,
+        memcpy(x->b_samples + (totallength - bufferlength), local_buffer,
                buffersize);
 
         totallength -= bufferlength;
@@ -577,13 +585,13 @@ void bed_shuffle_n_segments(t_bed *x, t_floatarg segments)
     }
 
     freebytes(local_buffer, buffersize);
-    
+
     garray_redraw(x->buffer);
 }
 
 /******************************************************************************/
 
-void bed_undo(t_bed *x)
+void bed_undo(t_bed* x)
 {
     if (!x->can_undo) {
         post("bed • Nothing to undo");
@@ -602,7 +610,7 @@ void bed_undo(t_bed *x)
     if (x->undo_cut) {
         long bufferframes = x->b_frames;
         long buffersize = bufferframes * sizeof(float);
-        float *local_buffer = getbytes(buffersize);
+        float* local_buffer = getbytes(buffersize);
         if (local_buffer == NULL) {
             pd_error(x, "bed • Cannot allocate memory for undo");
             x->can_undo = 0;
@@ -629,15 +637,15 @@ void bed_undo(t_bed *x)
         garray_redraw(x->buffer);
         return;
     }
-    
+
     if (x->undo_resize) {
         garray_resize(x->buffer, x->undo_frames);
     }
-    
+
     long chunksize = x->undo_frames * sizeof(float);
     memcpy(x->b_samples + x->undo_start, x->undo_samples, chunksize);
     x->can_undo = 0;
-    
+
     garray_redraw(x->buffer);
 }
 
