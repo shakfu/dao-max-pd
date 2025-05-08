@@ -135,7 +135,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: linux-externals
-        path: externals
+        path: externals/pd
         merge-multiple: true
 
     - uses: actions/upload-artifact@v4
