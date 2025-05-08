@@ -1,13 +1,15 @@
 add_pd_external(
-	PROJECT_SOURCE
-		bed_pd.c
+    PROJECT_SOURCE
+        bed_pd.c
 )
 
-include(${CMAKE_SOURCE_DIR}/source/max-sdk-base/script/max-pretarget.cmake)
+if(CMAKE_SYSTEM_NAME NOT STREQUAL "Linux")
+    include(${CMAKE_SOURCE_DIR}/source/max-sdk-base/script/max-pretarget.cmake)
 
-add_max_external(
-	PROJECT_SOURCE
-		bed_max.c
-)
+    add_max_external(
+        PROJECT_SOURCE
+            bed_max.c
+    )
 
-include(${CMAKE_SOURCE_DIR}/source/max-sdk-base/script/max-posttarget.cmake)
+    include(${CMAKE_SOURCE_DIR}/source/max-sdk-base/script/max-posttarget.cmake)
+endif()
