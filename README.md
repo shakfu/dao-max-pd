@@ -12,7 +12,7 @@ This friend WIP fork made the following changes to the original project:
 
 - Changed folder structure to a Max package structure.
 
-- Changed use of `sprintf(dst, ` in `assist` methods of Max/MSP externals to `snprintf_zero(dst, ASSIST_MAX_STRING_LEN, `.
+- Changed use of `sprintf(dst,` in `assist` methods of Max/MSP externals to `snprintf_zero(dst, ASSIST_MAX_STRING_LEN,`.
 
 - Changed use of `error()` in Pd externals to `pd_error()`.
 
@@ -27,6 +27,12 @@ This friend WIP fork made the following changes to the original project:
 - Dropped Max version of `cartopol~` and `poltocar~` as there are already Max builtins.
 
 - Added github action to build all externals.
+
+### Fork Todo
+
+- [ ] change deprecated use of `buffer~` objects in `bed` to more current api.
+
+
 
 ### Building
 
