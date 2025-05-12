@@ -1,3 +1,4 @@
+OS := $(shell uname)
 MAX_VERSION := 9
 PACKAGE_NAME := dao-max-pd
 PACKAGE := "$(HOME)/Documents/Max\ $(MAX_VERSION)/Packages/$(PACKAGE_NAME)"
@@ -37,6 +38,7 @@ clean:
 reset:
 	@rm -rf build externals
 
+ifeq ($(OS),Darwin)
 sign:
 	@codesign --sign - --timestamp --force externals/*.mxo/**/MacOS/*
 	@/usr/bin/xattr -r -d com.apple.quarantine externals/*.mxo
@@ -44,6 +46,7 @@ sign:
 	@codesign --sign - --timestamp --force externals/pd/**/*.darwin-*
 	@/usr/bin/xattr -r -d com.apple.quarantine externals/pd/**/*.pd_darwin
 	@/usr/bin/xattr -r -d com.apple.quarantine externals/pd/**/*.darwin-*
+endif
 
 sync:
 	@echo "updating submodule(s)"
