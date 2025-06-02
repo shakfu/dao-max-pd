@@ -4,33 +4,33 @@ This repository is a collection of Max/MSP and Pd externals developed from the e
 
 ## FORK NOTES
 
-This friend WIP fork made the following changes to the original project:
+This friendly fork has made the following changes to the upstream project:
+
+- Changed folder structure to a Max package structure.
 
 - Changed build system to exclusively use `cmake`.
 
-- Changed Max/MSP externals from 32bit dsp/perform methods to 64bit methods.
+- Added `max-sdk-base` as a git submodule dependency.
 
-- Changed folder structure to a Max package structure.
+- Changed Max/MSP externals from 32bit to 64bit dsp/perform methods.
 
 - Changed use of `sprintf(dst,` in `assist` methods of Max/MSP externals to `snprintf_zero(dst, ASSIST_MAX_STRING_LEN,`.
 
 - Changed use of `error()` in Pd externals to `pd_error()`.
 
-- Added `max-sdk-base` as a git submodule dependency.
-
 - Added puredata `m_pd.h` header to `source/include` folder.
 
 - Dropped common files and headers.. This is becoming too unweildy as Max and PD evolve.
 
-- Dropped 32-bit `multy~`, and renamed `multy64~` to `multy~`
+- Dropped 32-bit `multy~` implementation, and renamed `multy64~` to `multy~`
 
-- Dropped Max version of `cartopol~` and `poltocar~` as there are already Max builtins.
+- Dropped Max version of `cartopol~` and `poltocar~` as these conflict with Max builtins that do the same thing.
 
 - Added github action to build all externals.
 
 ### Fork Todo
 
-- [ ] change deprecated use of `buffer~` objects in `bed` to more current api.
+- [ ] change deprecated use of `buffer~` objects in `bed` to more current Max/MSP api.
 
 
 
